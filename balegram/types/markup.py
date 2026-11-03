@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Union
-
 from .base import BaleObject
 
 
@@ -40,7 +38,7 @@ class ReplyKeyboardRemove(BaleObject):
     remove_keyboard: bool = True
 
 
-ReplyMarkup = Union[InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove]
+ReplyMarkup = InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove
 
 __all__ = [
     "CopyTextButton",
