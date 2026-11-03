@@ -94,7 +94,7 @@ async def test_errors_are_mapped(make_bot: Any) -> None:
             {"ok": False, "error_code": 429, "parameters": {"retry_after": 3}}, status=429
         )
 
-    bot = await make_bot(handler)
+    bot = await make_bot(handler, retry_on_flood=0)
     with pytest.raises(BaleUnauthorized):
         await bot.get_me()
     with pytest.raises(BaleBadRequest):
@@ -191,3 +191,46 @@ def test_method_names() -> None:
     assert GetMe.__api_method__ == "getMe"
     assert SendMessage(chat_id=1, text="a").__api_method__ == "sendMessage"
     assert SendPhoto(chat_id=1, photo="x").__api_method__ == "sendPhoto"
+
+
+async def test_flood_pause_is_shared_between_parallel_requests(make_bot: Any) -> None:
+    """After one 429 the other in-flight requests must wait instead of hammering the server."""
+    import asyncio
+
+    hits: list[float] = []
+    loop = asyncio.get_running_loop()
+    blocked_until = 0.0
+
+    async def handler(request: web.Request) -> web.Response:
+        nonlocal blocked_until
+        now = loop.time()
+        hits.append(now)
+        if len(hits) == 1:
+            blocked_until = now + 1
+        if now < blocked_until:
+            return web.json_response(
+                {"ok": False, "error_code": 429, "parameters": {"retry_after": 1}}, status=429
+            )
+        return web.json_response({"ok": True, "result": True})
+
+    bot = await make_bot(handler)
+    results = await asyncio.gather(*(bot.delete_webhook() for _ in range(5)))
+    assert results == [True] * 5
+    # first wave of 5 requests (one 429 each at most), then exactly one retry per request
+    assert len(hits) <= 10
+
+
+async def test_flood_retries_are_bounded(make_bot: Any) -> None:
+    calls = 0
+
+    async def handler(request: web.Request) -> web.Response:
+        nonlocal calls
+        calls += 1
+        return web.json_response(
+            {"ok": False, "error_code": 429, "parameters": {"retry_after": 0}}, status=429
+        )
+
+    bot = await make_bot(handler, max_flood_retries=2)
+    with pytest.raises(BaleRetryAfter):
+        await bot.delete_webhook()
+    assert calls == 3  # first try + 2 retries
