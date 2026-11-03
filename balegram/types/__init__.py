@@ -11,6 +11,7 @@ from .chat import (
     User,
     WebhookInfo,
 )
+from .input_file import BufferedInputFile, FSInputFile, InputFile
 from .markup import (
     CopyTextButton,
     InlineKeyboardButton,
