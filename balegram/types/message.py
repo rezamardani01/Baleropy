@@ -265,6 +265,12 @@ class CallbackQuery(BoundObject):
     message: Message | None = None
     data: str | None = None
 
+    _answered: bool = False
+
+    @property
+    def is_answered(self) -> bool:
+        return self._answered
+
     @property
     def is_old_client(self) -> bool:
         """Old Bale clients (``id`` starts with ``1``) cannot receive ``answerCallbackQuery``."""
@@ -272,6 +278,7 @@ class CallbackQuery(BoundObject):
 
     async def answer(self, text: str | None = None, show_alert: bool | None = None) -> bool:
         """Acknowledge the button press. A no-op (returns ``False``) for old clients."""
+        self._answered = True
         if self.is_old_client:
             return False
         return await self.bot.answer_callback_query(self.id, text, show_alert)
