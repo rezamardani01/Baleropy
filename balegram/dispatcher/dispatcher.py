@@ -8,6 +8,7 @@ from typing import Any
 
 from ..client.bot import Bot
 from ..exceptions import (
+    BaleAPIError,
     BaleNetworkError,
     BaleRetryAfter,
     BaleServerError,
@@ -220,6 +221,9 @@ class Dispatcher(Router):
         try:
             async with self._semaphore:
                 await self.feed_update(bot, update, **workflow)
+        except BaleAPIError as error:
+            # expected operational errors (blocked bot, no rights...): one line, no traceback
+            log.warning("Update %s: %s", update.update_id, error)
         except Exception:
             log.exception("Unhandled error while processing update %s", update.update_id)
 
