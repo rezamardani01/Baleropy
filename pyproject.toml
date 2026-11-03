@@ -52,3 +52,6 @@ select = ["E", "F", "I", "UP", "B", "ASYNC"]
 python_version = "3.10"
 strict = true
 plugins = ["pydantic.mypy"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
