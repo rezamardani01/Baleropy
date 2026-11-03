@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "balegram"
+dynamic = ["version"]
+description = "Modern, fully-typed, asynchronous framework for the Bale Bot API"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Reza Mardani" }]
+keywords = ["bale", "bot", "api", "asyncio", "framework", "aiogram"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Framework :: AsyncIO",
+    "Typing :: Typed",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = ["aiohttp>=3.9", "pydantic>=2.7,<3"]
+
+[project.optional-dependencies]
+redis = ["redis>=5"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "aresponses>=3", "ruff>=0.5", "mypy>=1.10"]
+
+[project.urls]
+Homepage = "https://github.com/rezamardani01/balegram"
+Issues = "https://github.com/rezamardani01/balegram/issues"
+
+[tool.hatch.version]
+path = "balegram/__meta__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["balegram"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+plugins = ["pydantic.mypy"]
