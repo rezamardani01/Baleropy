@@ -48,6 +48,7 @@ class Dispatcher(Router):
         self.update.outer_middleware(FSMContextMiddleware(self.storage, fsm_strategy))
         self._stop_event: asyncio.Event | None = None
         self._tasks: set[asyncio.Task[Any]] = set()
+        self._semaphore = asyncio.Semaphore(50)
 
     def __getitem__(self, key: str) -> Any:
         return self.workflow_data[key]
@@ -94,6 +95,7 @@ class Dispatcher(Router):
         *bots: Bot,
         polling_timeout: int = 30,
         handle_as_tasks: bool = True,
+        max_concurrent_updates: int = 50,
         skip_updates: bool = False,
         delete_webhook: bool = True,
         close_bot_session: bool = True,
@@ -107,6 +109,7 @@ class Dispatcher(Router):
         if not bots:
             raise ValueError("At least one Bot instance is required")
         self._stop_event = asyncio.Event()
+        self._semaphore = asyncio.Semaphore(max_concurrent_updates)
         workflow = {**kwargs, "bots": bots}
         await self.emit_startup(dispatcher=self, bot=bots[-1], **self.workflow_data, **workflow)
         try:
@@ -215,7 +218,8 @@ class Dispatcher(Router):
 
     async def _safe_feed(self, bot: Bot, update: Update, workflow: dict[str, Any]) -> None:
         try:
-            await self.feed_update(bot, update, **workflow)
+            async with self._semaphore:
+                await self.feed_update(bot, update, **workflow)
         except Exception:
             log.exception("Unhandled error while processing update %s", update.update_id)
 

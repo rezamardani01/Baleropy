@@ -19,11 +19,12 @@ class AiohttpSession(BaseSession):
     def __init__(
         self,
         timeout: float = 60.0,
-        retry_on_flood: int = 0,
+        retry_on_flood: int = 60,
+        max_flood_retries: int = 5,
         proxy: str | None = None,
         connector: aiohttp.BaseConnector | None = None,
     ) -> None:
-        super().__init__(timeout, retry_on_flood)
+        super().__init__(timeout, retry_on_flood, max_flood_retries)
         self.proxy = proxy
         self._connector = connector
         self._session: aiohttp.ClientSession | None = None

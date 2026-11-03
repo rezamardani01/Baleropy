@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import abc
+import asyncio
 import json
+import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -38,9 +40,15 @@ _ERRORS: dict[int, type[BaleAPIError]] = {
 class BaseSession(abc.ABC):
     """Transport layer. Implement :meth:`_send` to plug another HTTP client."""
 
-    def __init__(self, timeout: float = 60.0, retry_on_flood: int = 0) -> None:
+    def __init__(
+        self, timeout: float = 60.0, retry_on_flood: int = 60, max_flood_retries: int = 5
+    ) -> None:
+        """``retry_on_flood``: sleep and retry when Bale asks to wait at most this many seconds
+        (``0`` disables); ``max_flood_retries`` bounds the attempts per request."""
         self.timeout = timeout
         self.retry_on_flood = retry_on_flood
+        self.max_flood_retries = max_flood_retries
+        self._blocked_until = 0.0
         self._middlewares: list[RequestMiddleware] = []
 
     def middleware(self, middleware: RequestMiddleware) -> RequestMiddleware:
@@ -66,17 +74,22 @@ class BaseSession(abc.ABC):
         return await handler(bot, method)  # type: ignore[no-any-return]
 
     async def _request(self, bot: Bot, method: BaleMethod[T]) -> T:
+        attempts = 0
         while True:
+            # a 429 pauses *every* request of this session, otherwise parallel handlers
+            # would all retry at once and trigger the limit again
+            delay = self._blocked_until - time.monotonic()
+            if delay > 0:
+                await asyncio.sleep(delay)
             status, body = await self._send(bot, method)
             try:
                 return self._parse(bot, method, status, body)
             except BaleRetryAfter as error:
-                if error.retry_after and error.retry_after <= self.retry_on_flood:
-                    import asyncio
-
-                    await asyncio.sleep(error.retry_after)
-                    continue
-                raise
+                wait = error.retry_after or 1
+                attempts += 1
+                if wait > self.retry_on_flood or attempts > self.max_flood_retries:
+                    raise
+                self._blocked_until = max(self._blocked_until, time.monotonic() + wait)
 
     @staticmethod
     def _parse(bot: Bot, method: BaleMethod[T], status: int, body: bytes) -> T:

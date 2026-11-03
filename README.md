@@ -31,13 +31,16 @@ from balegram.types import Message
 
 dp = Dispatcher()
 
+
 @dp.message(CommandStart())
 async def start(message: Message):
     await message.answer("Hello!")
 
+
 @dp.message(F.text)
 async def echo(message: Message):
     await message.reply(message.text)
+
 
 asyncio.run(dp.start_polling(Bot("TOKEN")))
 ```
@@ -49,8 +52,10 @@ from balegram import Router
 
 shop = Router(name="shop")
 
+
 @shop.message(Command("buy"))
 async def buy(message: Message): ...
+
 
 dp.include_router(shop)
 ```
@@ -63,14 +68,16 @@ handler wins (raise `SkipHandler` to pass the event on).
 ```python
 from balegram.dispatcher import BaseMiddleware
 
+
 class DbMiddleware(BaseMiddleware):
     async def __call__(self, handler, event, data):
         async with pool.acquire() as db:
-            data["db"] = db            # available as `db` in every handler
+            data["db"] = db  # available as `db` in every handler
             return await handler(event, data)
 
-dp.update.outer_middleware(DbMiddleware())     # every update
-router.message.middleware(my_inner_mw)         # only when a message handler matched
+
+dp.update.outer_middleware(DbMiddleware())  # every update
+router.message.middleware(my_inner_mw)  # only when a message handler matched
 ```
 
 Built in: `LoggingMiddleware`, `ThrottlingMiddleware`, `CallbackAnswerMiddleware`.
@@ -82,18 +89,20 @@ Raise `CancelHandler` inside a middleware to drop the event.
 from balegram import F
 from balegram.filters import Filter, Command, CallbackData, ChatTypeFilter
 
+
 @router.message(F.text.startswith("!"), ChatTypeFilter("group"))
 @router.message(Command("ban"), F.reply_to_message)
 @router.message((F.text == "a") | (F.text == "b"))
-
 class Product(CallbackData, prefix="prod"):
     id: int
     action: str
 
+
 @router.callback_query(Product.filter(F.action == "buy"))
 async def buy(query, callback_data: Product): ...
 
-class IsPremium(Filter):                       # custom filter
+
+class IsPremium(Filter):  # custom filter
     async def __call__(self, event, db) -> bool | dict:
         user = await db.get_user(event.from_user.id)
         return {"user": user} if user.premium else False
@@ -104,13 +113,16 @@ class IsPremium(Filter):                       # custom filter
 ```python
 from balegram.fsm import State, StatesGroup, FSMContext
 
+
 class Form(StatesGroup):
     name = State()
     age = State()
 
+
 @dp.message(Command("form"))
 async def begin(message: Message, state: FSMContext):
     await state.set_state(Form.name)
+
 
 @dp.message(Form.name)
 async def name(message: Message, state: FSMContext):
