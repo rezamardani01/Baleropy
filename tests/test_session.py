@@ -75,7 +75,7 @@ async def test_send_message_sends_json_without_nones(make_bot: Any) -> None:
 
     bot = await make_bot(handler)
     msg = await bot.send_message(5, "hi")
-    assert seen == {"chat_id": 5, "text": "hi"}
+    assert seen == {"chat_id": "5", "text": "hi"}
     assert msg.message_id == 7
 
 
@@ -234,3 +234,15 @@ async def test_flood_retries_are_bounded(make_bot: Any) -> None:
     with pytest.raises(BaleRetryAfter):
         await bot.delete_webhook()
     assert calls == 3  # first try + 2 retries
+
+
+def test_chat_ids_are_sent_as_strings() -> None:
+    """Bale answers 'chat id is empty' to an integer chat_id on sendChatAction."""
+    from balegram.methods import ForwardMessage, SendChatAction
+
+    data, _ = SendChatAction(chat_id=1284000539, action="typing").build_request()
+    assert data == {"chat_id": "1284000539", "action": "typing"}
+    data, _ = SendChatAction(chat_id="@channel", action="typing").build_request()
+    assert data["chat_id"] == "@channel"
+    data, _ = ForwardMessage(chat_id=-5, from_chat_id=7, message_id=1).build_request()
+    assert data == {"chat_id": "-5", "from_chat_id": "7", "message_id": 1}

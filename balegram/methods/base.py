@@ -24,6 +24,11 @@ class BaleMethod(BaseModel, Generic[T]):
     def build_request(self) -> tuple[dict[str, Any], dict[str, InputFile]]:
         """Split the method into plain fields and uploaded files."""
         raw = self.model_dump(by_alias=True, exclude_none=True)
+        # Bale rejects an integer chat_id on some methods ("chat id is empty" on sendChatAction)
+        # but accepts strings everywhere, so always send chat ids as strings.
+        for key in ("chat_id", "from_chat_id"):
+            if isinstance(raw.get(key), int):
+                raw[key] = str(raw[key])
         data: dict[str, Any] = {}
         files: dict[str, InputFile] = {}
         for key, value in raw.items():
