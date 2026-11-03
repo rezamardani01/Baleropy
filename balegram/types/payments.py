@@ -32,6 +32,9 @@ class PreCheckoutQuery(BoundObject):
     total_amount: int
     invoice_payload: str
 
+    async def answer(self, ok: bool, error_message: str | None = None) -> bool:
+        return await self.bot.answer_pre_checkout_query(self.id, ok, error_message)
+
 
 class Transaction(BoundObject):
     id: str

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from enum import Enum
+from pathlib import Path
+from typing import BinaryIO
 
 from pydantic import Field
 
 from .base import BoundObject
-from .chat import Chat, User
-from .markup import InlineKeyboardMarkup
+from .chat import Chat, ChatAction, User
+from .input_file import InputFile
+from .markup import InlineKeyboardMarkup, ReplyMarkup
 from .media import (
     Animation,
     Audio,
@@ -89,12 +92,189 @@ class Message(BoundObject):
                 return name
         return "unknown"
 
+    # --- shortcuts -------------------------------------------------------------------------
+    @property
+    def file_id(self) -> str | None:
+        """``file_id`` of the attached media (largest size for photos)."""
+        if self.photo:
+            return self.photo[-1].file_id
+        for name in ("document", "video", "audio", "voice", "animation", "sticker"):
+            media = getattr(self, name, None)
+            if media is not None:
+                return str(media.file_id)
+        return None
+
+    async def answer(
+        self, text: str, reply_markup: ReplyMarkup | None = None, *, reply: bool = False
+    ) -> Message:
+        """Send a message to the same chat (``reply=True`` quotes this message)."""
+        return await self.bot.send_message(
+            self.chat.id,
+            text,
+            reply_to_message_id=self.message_id if reply else None,
+            reply_markup=reply_markup,
+        )
+
+    async def reply(self, text: str, reply_markup: ReplyMarkup | None = None) -> Message:
+        return await self.answer(text, reply_markup, reply=True)
+
+    async def answer_photo(
+        self,
+        photo: InputFile | str,
+        caption: str | None = None,
+        reply_markup: ReplyMarkup | None = None,
+        *,
+        reply: bool = False,
+    ) -> Message:
+        return await self.bot.send_photo(
+            self.chat.id, photo, caption, self.message_id if reply else None, reply_markup
+        )
+
+    async def answer_document(
+        self,
+        document: InputFile | str,
+        caption: str | None = None,
+        reply_markup: ReplyMarkup | None = None,
+        *,
+        reply: bool = False,
+    ) -> Message:
+        return await self.bot.send_document(
+            self.chat.id, document, caption, self.message_id if reply else None, reply_markup
+        )
+
+    async def answer_video(
+        self,
+        video: InputFile | str,
+        caption: str | None = None,
+        reply_markup: ReplyMarkup | None = None,
+        *,
+        reply: bool = False,
+    ) -> Message:
+        return await self.bot.send_video(
+            self.chat.id, video, caption, self.message_id if reply else None, reply_markup
+        )
+
+    async def answer_audio(
+        self,
+        audio: InputFile | str,
+        caption: str | None = None,
+        reply_markup: ReplyMarkup | None = None,
+        *,
+        reply: bool = False,
+    ) -> Message:
+        return await self.bot.send_audio(
+            self.chat.id, audio, caption, self.message_id if reply else None, reply_markup
+        )
+
+    async def answer_voice(
+        self,
+        voice: InputFile | str,
+        caption: str | None = None,
+        reply_markup: ReplyMarkup | None = None,
+        *,
+        reply: bool = False,
+    ) -> Message:
+        return await self.bot.send_voice(
+            self.chat.id, voice, caption, self.message_id if reply else None, reply_markup
+        )
+
+    async def answer_animation(
+        self,
+        animation: InputFile | str,
+        caption: str | None = None,
+        reply_markup: ReplyMarkup | None = None,
+        *,
+        reply: bool = False,
+    ) -> Message:
+        return await self.bot.send_animation(
+            self.chat.id, animation, caption, self.message_id if reply else None, reply_markup
+        )
+
+    async def answer_location(
+        self, latitude: float, longitude: float, *, reply: bool = False
+    ) -> Message:
+        return await self.bot.send_location(
+            self.chat.id,
+            latitude,
+            longitude,
+            reply_to_message_id=self.message_id if reply else None,
+        )
+
+    async def answer_contact(
+        self,
+        phone_number: str | int,
+        first_name: str,
+        last_name: str | None = None,
+        *,
+        reply: bool = False,
+    ) -> Message:
+        return await self.bot.send_contact(
+            self.chat.id,
+            phone_number,
+            first_name,
+            last_name,
+            reply_to_message_id=self.message_id if reply else None,
+        )
+
+    async def answer_chat_action(self, action: ChatAction | str = ChatAction.TYPING) -> bool:
+        return await self.bot.send_chat_action(self.chat.id, action)
+
+    async def edit_text(
+        self, text: str, reply_markup: InlineKeyboardMarkup | None = None
+    ) -> Message | bool:
+        return await self.bot.edit_message_text(self.chat.id, self.message_id, text, reply_markup)
+
+    async def edit_caption(
+        self, caption: str | None = None, reply_markup: InlineKeyboardMarkup | None = None
+    ) -> Message | bool:
+        return await self.bot.edit_message_caption(
+            self.chat.id, self.message_id, caption, reply_markup
+        )
+
+    async def edit_reply_markup(
+        self, reply_markup: InlineKeyboardMarkup | None = None
+    ) -> Message | bool:
+        return await self.bot.edit_message_reply_markup(self.chat.id, self.message_id, reply_markup)
+
+    async def delete(self) -> bool:
+        return await self.bot.delete_message(self.chat.id, self.message_id)
+
+    async def forward(self, chat_id: int | str) -> Message:
+        return await self.bot.forward_message(chat_id, self.chat.id, self.message_id)
+
+    async def copy_to(self, chat_id: int | str) -> MessageId:
+        return await self.bot.copy_message(chat_id, self.chat.id, self.message_id)
+
+    async def pin(self) -> bool:
+        return await self.bot.pin_chat_message(self.chat.id, self.message_id)
+
+    async def unpin(self) -> bool:
+        return await self.bot.unpin_chat_message(self.chat.id, self.message_id)
+
+    async def download(self, destination: BinaryIO | str | Path | None = None) -> BinaryIO | None:
+        """Download the attached media (see ``Bot.download``)."""
+        file_id = self.file_id
+        if file_id is None:
+            raise ValueError("This message has no downloadable media")
+        return await self.bot.download(file_id, destination)
+
 
 class CallbackQuery(BoundObject):
     id: str
     from_user: User = Field(alias="from")
     message: Message | None = None
     data: str | None = None
+
+    @property
+    def is_old_client(self) -> bool:
+        """Old Bale clients (``id`` starts with ``1``) cannot receive ``answerCallbackQuery``."""
+        return self.id.startswith("1")
+
+    async def answer(self, text: str | None = None, show_alert: bool | None = None) -> bool:
+        """Acknowledge the button press. A no-op (returns ``False``) for old clients."""
+        if self.is_old_client:
+            return False
+        return await self.bot.answer_callback_query(self.id, text, show_alert)
 
 
 class Update(BoundObject):
