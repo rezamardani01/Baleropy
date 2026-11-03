@@ -5,6 +5,7 @@ from typing import Any, Generic, TypeVar
 
 from ..filters.callback_data import CallbackData
 from ..types import (
+    ButtonStyle,
     CopyTextButton,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -81,6 +82,10 @@ class _KeyboardBuilder(Generic[B]):
     def export(self) -> list[list[B]]:
         return [list(row) for row in self._rows]
 
+    def copy(self) -> Any:
+        """An independent copy of this builder."""
+        return type(self)(self._rows)
+
 
 class InlineKeyboardBuilder(_KeyboardBuilder[InlineKeyboardButton]):
     """``InlineKeyboardBuilder().button(text="Yes", callback_data="y").as_markup()``"""
@@ -93,6 +98,7 @@ class InlineKeyboardBuilder(_KeyboardBuilder[InlineKeyboardButton]):
         url: str | None = None,
         web_app: WebAppInfo | str | None = None,
         copy_text: CopyTextButton | str | None = None,
+        style: ButtonStyle | str | None = None,
     ) -> InlineKeyboardBuilder:
         actions = [a for a in (callback_data, url, web_app, copy_text) if a is not None]
         if len(actions) > 1:
@@ -110,8 +116,14 @@ class InlineKeyboardBuilder(_KeyboardBuilder[InlineKeyboardButton]):
                 url=url,
                 web_app=web_app,
                 copy_text=copy_text,
+                style=style,
             )
         )
+
+    @classmethod
+    def from_markup(cls, markup: InlineKeyboardMarkup) -> InlineKeyboardBuilder:
+        """Start from an existing keyboard, e.g. ``message.reply_markup``."""
+        return cls(markup.inline_keyboard)
 
     def as_markup(self) -> InlineKeyboardMarkup:
         return InlineKeyboardMarkup(inline_keyboard=self.export())
@@ -127,6 +139,7 @@ class ReplyKeyboardBuilder(_KeyboardBuilder[KeyboardButton]):
         request_contact: bool | None = None,
         request_location: bool | None = None,
         web_app: WebAppInfo | str | None = None,
+        style: ButtonStyle | str | None = None,
     ) -> ReplyKeyboardBuilder:
         if isinstance(web_app, str):
             web_app = WebAppInfo(url=web_app)
@@ -136,6 +149,7 @@ class ReplyKeyboardBuilder(_KeyboardBuilder[KeyboardButton]):
                 request_contact=request_contact,
                 request_location=request_location,
                 web_app=web_app,
+                style=style,
             )
         )
 
