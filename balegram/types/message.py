@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import BinaryIO
+from typing import Any, BinaryIO
 
 from pydantic import Field
 
@@ -74,7 +74,9 @@ class Message(BoundObject):
     invoice: Invoice | None = None
     successful_payment: SuccessfulPayment | None = None
     web_app_data: WebAppData | None = None
-    reply_markup: InlineKeyboardMarkup | None = None
+    # the Bale docs type this field inconsistently, so an unexpected shape must never drop
+    # the whole update
+    reply_markup: InlineKeyboardMarkup | dict[str, Any] | None = None
 
     @property
     def content_text(self) -> str | None:

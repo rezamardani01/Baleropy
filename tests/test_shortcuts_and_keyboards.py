@@ -145,3 +145,45 @@ def test_reply_builder_serialization() -> None:
     )
     dumped = markup.model_dump(exclude_none=True)
     assert dumped == {"keyboard": [[{"text": "Share", "request_contact": True}, {"text": "Plain"}]]}
+
+
+def test_colored_buttons_serialize_style() -> None:
+    from balegram.methods import SendMessage
+    from balegram.types import ButtonStyle
+
+    kb = InlineKeyboardBuilder()
+    kb.button(text="green", callback_data="g", style=ButtonStyle.SUCCESS)
+    kb.button(text="red", callback_data="r", style="danger")
+    kb.button(text="blue", callback_data="b", style=ButtonStyle.PRIMARY)
+    kb.button(text="plain", callback_data="p")
+    kb.adjust(2, 2)
+    data, _ = SendMessage(chat_id=1, text="x", reply_markup=kb.as_markup()).build_request()
+    rows = data["reply_markup"]["inline_keyboard"]
+    assert rows[0][0] == {"text": "green", "callback_data": "g", "style": "success"}
+    assert rows[0][1]["style"] == "danger"
+    assert rows[1][0]["style"] == "primary"
+    assert "style" not in rows[1][1]  # unset style is never sent
+    import json
+
+    assert '"style": "success"' in json.dumps(data["reply_markup"])
+
+
+def test_reply_keyboard_style_and_builder_copy() -> None:
+    markup = ReplyKeyboardBuilder().button(text="ok", style="success").as_markup()
+    assert markup.model_dump(exclude_none=True) == {
+        "keyboard": [[{"text": "ok", "style": "success"}]]
+    }
+    original = InlineKeyboardBuilder().button(text="a", callback_data="a")
+    clone = InlineKeyboardBuilder.from_markup(original.as_markup())
+    clone.button(text="b", callback_data="b")
+    assert len(original) == 1 and len(clone) == 2
+    assert len(original.copy().button(text="c", callback_data="c")) == 2 and len(original) == 1
+
+
+def test_message_survives_odd_reply_markup() -> None:
+    """The docs type Message.reply_markup as a button; an odd shape must not drop the update."""
+    for odd in ({"text": "x", "callback_data": "y"}, {"inline_keyboard": [[{"text": "a"}]]}):
+        message = Message.model_validate(
+            {"message_id": 1, "date": 1, "chat": {"id": 1, "type": "private"}, "reply_markup": odd}
+        )
+        assert message.reply_markup is not None
