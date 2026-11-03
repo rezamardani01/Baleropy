@@ -14,6 +14,9 @@ from ..exceptions import (
     BaleUnauthorized,
     CancelHandler,
 )
+from ..fsm.middleware import FSMContextMiddleware, FSMStrategy
+from ..fsm.storage.base import BaseStorage
+from ..fsm.storage.memory import MemoryStorage
 from ..types import Update
 from .event.bases import UNHANDLED, Data, ErrorEvent
 from .event.observer import EventObserver
@@ -27,13 +30,22 @@ log = logging.getLogger("balegram.dispatcher")
 class Dispatcher(Router):
     """Root router: receives updates (polling / webhook / manual) and feeds them to handlers."""
 
-    def __init__(self, *, name: str | None = None, **workflow_data: Any) -> None:
+    def __init__(
+        self,
+        *,
+        name: str | None = None,
+        storage: BaseStorage | None = None,
+        fsm_strategy: FSMStrategy = FSMStrategy.USER_IN_CHAT,
+        **workflow_data: Any,
+    ) -> None:
         super().__init__(name=name or "Dispatcher")
+        self.storage = storage or MemoryStorage()
         #: extra keyword arguments injected into every handler (``Dispatcher(db=pool)``)
         self.workflow_data: dict[str, Any] = workflow_data
         #: outer middlewares registered here wrap the processing of *every* update
         self.update = EventObserver(self, "update")
         self.update.outer_middleware(UserContextMiddleware())
+        self.update.outer_middleware(FSMContextMiddleware(self.storage, fsm_strategy))
         self._stop_event: asyncio.Event | None = None
         self._tasks: set[asyncio.Task[Any]] = set()
 
