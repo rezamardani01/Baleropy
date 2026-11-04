@@ -103,3 +103,28 @@ async def test_modular_example(monkeypatch: Any) -> None:
     await dp.feed_update(bot, bound(message("/stats", 2)))
     await dp.feed_update(bot, bound(message("one two three four", 3)))
     assert bot.sent == [(5, "آمار فقط برای ادمین‌ها"), (5, "4 کلمه فرستادید")]
+
+
+async def test_colored_buttons_example() -> None:
+    module = load("colored_buttons")
+    bot = FakeBot()
+    sent: list[Any] = []
+
+    async def capture(chat_id: Any, text: str, *args: Any, **kwargs: Any) -> None:
+        sent.append(kwargs.get("reply_markup") or (args[1] if len(args) > 1 else None))
+
+    bot.send_message = capture  # type: ignore[method-assign]
+    update = message("/start")
+    update = Update.model_validate(update.model_dump(by_alias=True), context={"bot": bot})
+    await module.dp.feed_update(bot, update)
+    keyboard = sent[0].inline_keyboard
+    styles = [button.style for row in keyboard for button in row]
+    assert styles == ["success", "danger", "primary", None]
+    assert [len(row) for row in keyboard] == [2, 1, 1]
+
+
+def test_examples_use_a_token_placeholder() -> None:
+    for path in EXAMPLES.glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        assert 'TOKEN = "YOUR_BOT_TOKEN"' in source, path.name
+        assert "environ" not in source, path.name

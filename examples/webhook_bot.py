@@ -1,16 +1,21 @@
 """Run the bot behind a webhook (Bale accepts ports 443 and 88, HTTPS only)."""
 
-import os
-
 from aiohttp import web
 
 from balegram import Bot, Dispatcher
 from balegram.filters import CommandStart
 from balegram.types import Message
-from balegram.webhook import SimpleRequestHandler, secret_path, setup_application
+from balegram.webhook import SimpleRequestHandler, setup_application
 
-BASE_URL = os.environ["PUBLIC_URL"]  # e.g. https://bot.example.com
-PATH = os.environ.get("WEBHOOK_PATH") or secret_path()  # keep it unguessable
+# Get a token from @botfather (https://ble.ir/botfather) and paste it here.
+# Never commit a real token to a public repository.
+TOKEN = "YOUR_BOT_TOKEN"
+
+# Public HTTPS address of your server (Bale supports ports 443 and 88).
+BASE_URL = "https://bot.example.com"
+# Keep the path unguessable: Bale sends no secret header. Generate it once and keep it:
+#   python -c "from balegram.webhook import secret_path; print(secret_path())"
+PATH = "/webhook/CHANGE_ME"
 
 dp = Dispatcher()
 
@@ -26,7 +31,7 @@ async def on_startup(bot: Bot) -> None:
 
 
 def main() -> None:
-    bot = Bot(os.environ["BALE_TOKEN"])
+    bot = Bot(TOKEN)
     app = web.Application()
     SimpleRequestHandler(dp, bot).register(app, PATH)
     setup_application(app, dp, bot=bot)

@@ -1,11 +1,14 @@
 """Smallest possible bot: greets on /start and echoes everything else."""
 
 import asyncio
-import os
 
 from balegram import Bot, Dispatcher, F
 from balegram.filters import CommandStart
 from balegram.types import Message
+
+# Get a token from @botfather (https://ble.ir/botfather) and paste it here.
+# Never commit a real token to a public repository.
+TOKEN = "YOUR_BOT_TOKEN"
 
 dp = Dispatcher()
 
@@ -21,9 +24,12 @@ async def echo(message: Message) -> None:
 
 
 async def main() -> None:
-    bot = Bot(os.environ["BALE_TOKEN"])
-    await dp.start_polling(bot)
+    bot = Bot(TOKEN)
+    await dp.start_polling(bot, skip_updates=True)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass  # Ctrl+C
