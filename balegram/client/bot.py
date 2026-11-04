@@ -27,7 +27,7 @@ from ..types import (
     WebhookInfo,
 )
 from ..types.input_file import InputFile
-from .server import PRODUCTION, ApiServer
+from .server import BUSINESS, PRODUCTION, ApiServer
 from .session.aiohttp import AiohttpSession
 from .session.base import BaseSession
 
@@ -66,6 +66,15 @@ class Bot:
         self.session = session or AiohttpSession()
         self.server = server
         self._me: User | None = None
+
+    @classmethod
+    def business(cls, token: str, session: BaseSession | None = None) -> Bot:
+        """A bot for the Business API (bulk messaging with a separate, paid rate quota).
+
+        Only getMe, sendMessage, forwardMessage, sendPhoto, sendVideo, sendAudio and sendDocument
+        are available; ``chat_id`` must be a private chat and files can only be sent by ``file_id``.
+        """
+        return cls(token, session, server=BUSINESS)
 
     @property
     def id(self) -> int:

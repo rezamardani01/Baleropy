@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import operator
 import re
 from collections.abc import Callable, Container
 from typing import Any
@@ -7,6 +8,13 @@ from typing import Any
 from .base import Filter, FilterResult
 
 _MISSING = object()
+
+
+class _RootStep:
+    """A step that also needs the original object (to compare two magic expressions)."""
+
+    def __init__(self, function: Callable[[Any, Any], Any]) -> None:
+        self.function = function
 
 
 class MagicFilter(Filter):
@@ -19,7 +27,7 @@ class MagicFilter(Filter):
 
     __slots__ = ("_steps",)
 
-    def __init__(self, steps: tuple[Callable[[Any], Any], ...] = ()) -> None:
+    def __init__(self, steps: tuple[Callable[[Any], Any] | _RootStep, ...] = ()) -> None:
         self._steps = steps
 
     def _then(self, step: Callable[[Any], Any]) -> MagicFilter:
@@ -27,9 +35,10 @@ class MagicFilter(Filter):
 
     def resolve(self, value: Any) -> Any:
         """Apply the recorded steps. Returns ``None`` if a step cannot be applied."""
+        root = value
         try:
             for step in self._steps:
-                value = step(value)
+                value = step.function(value, root) if isinstance(step, _RootStep) else step(value)
         except (AttributeError, TypeError, KeyError, IndexError, ValueError):
             return None
         return value
@@ -55,23 +64,30 @@ class MagicFilter(Filter):
         return self._then(lambda v: v[key])
 
     # --- comparison ------------------------------------------------------------------------
+    def _compare(self, other: Any, op: Callable[[Any, Any], Any]) -> MagicFilter:
+        if isinstance(other, MagicFilter):  # F.a == F.b compares two values of the same object
+            return MagicFilter(
+                (*self._steps, _RootStep(lambda value, root: op(value, other.resolve(root))))
+            )
+        return self._then(lambda value: op(value, other))
+
     def __eq__(self, other: object) -> MagicFilter:  # type: ignore[override]
-        return self._then(lambda v: v == other)
+        return self._compare(other, operator.eq)
 
     def __ne__(self, other: object) -> MagicFilter:  # type: ignore[override]
-        return self._then(lambda v: v != other)
+        return self._compare(other, operator.ne)
 
     def __lt__(self, other: Any) -> MagicFilter:
-        return self._then(lambda v: v < other)
+        return self._compare(other, operator.lt)
 
     def __le__(self, other: Any) -> MagicFilter:
-        return self._then(lambda v: v <= other)
+        return self._compare(other, operator.le)
 
     def __gt__(self, other: Any) -> MagicFilter:
-        return self._then(lambda v: v > other)
+        return self._compare(other, operator.gt)
 
     def __ge__(self, other: Any) -> MagicFilter:
-        return self._then(lambda v: v >= other)
+        return self._compare(other, operator.ge)
 
     __hash__ = object.__hash__
 

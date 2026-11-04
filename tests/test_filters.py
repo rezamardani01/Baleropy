@@ -162,3 +162,11 @@ async def test_callback_data_filter() -> None:
     assert not await flt(query("item:5:blue:0:"))
     assert not await flt(query("other:5:red:0:"))
     assert not await flt(query("item:not-int:red:0:"))
+
+
+async def test_magic_compares_two_expressions() -> None:
+    reply = {"message_id": 4, "date": 1, "chat": {"id": 7, "type": "private"}}
+    event = msg("5", reply_to_message=reply)
+    assert await (F.chat.id == F.from_user.id)(event) is True  # both are 7
+    assert not await (F.message_id > F.reply_to_message.message_id)(event)  # 1 > 4
+    assert await (F.message_id < F.reply_to_message.message_id)(event) is True  # 1 < 4
