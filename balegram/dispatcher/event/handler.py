@@ -49,6 +49,8 @@ class CallableObject:
         return args[: len(self.positional_names)]
 
     async def call(self, *args: Any, **kwargs: Any) -> Any:
+        if args and "event" not in kwargs:
+            kwargs["event"] = args[0]  # a parameter named `event` always receives the event
         args = self.prepare_args(args, kwargs)
         call = partial(self.callback, *args, **self.prepare_kwargs(kwargs))
         if self.awaitable:
