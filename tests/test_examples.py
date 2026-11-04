@@ -111,16 +111,25 @@ async def test_colored_buttons_example() -> None:
     sent: list[Any] = []
 
     async def capture(chat_id: Any, text: str, *args: Any, **kwargs: Any) -> None:
-        sent.append(kwargs.get("reply_markup") or (args[1] if len(args) > 1 else None))
+        sent.append(
+            kwargs.get("buttons")
+            or kwargs.get("reply_markup")
+            or (args[1] if len(args) > 1 else None)
+        )
 
     bot.send_message = capture  # type: ignore[method-assign]
     update = message("/start")
     update = Update.model_validate(update.model_dump(by_alias=True), context={"bot": bot})
     await module.dp.feed_update(bot, update)
-    keyboard = sent[0].inline_keyboard
+    keyboard = sent[0]
     styles = [button.style for row in keyboard for button in row]
     assert styles == ["success", "danger", "primary", None]
     assert [len(row) for row in keyboard] == [2, 1, 1]
+    assert [[button.text for button in row] for row in keyboard] == [
+        ["دکمه سبز", "دکمه قرمز"],
+        ["دکمه آبی"],
+        ["دکمه معمولی"],
+    ]
 
 
 def test_examples_use_a_token_placeholder() -> None:

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3
+
+- Publish from GitHub Actions with PyPI Trusted Publishing to restore verifiable provenance.
+
+## 0.3.2
+
+- Use explicit `Button.inline` rows for the colored-keyboard example instead of `adjust()`.
+
 ## 0.3.1
 
 - Accept nested `buttons=` rows when editing message text, captions, and inline keyboards.
