@@ -18,10 +18,12 @@ familiar to [aiogram](https://github.com/aiogram/aiogram) users.
 ## Install
 
 ```bash
-pip install balegram
+pip install balegram-api
 # with Redis storage for the FSM
-pip install "balegram[redis]"
+pip install "balegram-api[redis]"
 ```
+
+The PyPI package is called **`balegram-api`**; in code you still `import balegram`.
 
 Latest unreleased code: `pip install git+https://github.com/rezamardani01/balegram.git`
 
