@@ -14,12 +14,41 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      already_published: ${{ steps.pypi.outputs.already_published }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install build twine
+      - name: Check whether this version is already on PyPI
+        id: pypi
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+          version = re.search(
+              r'"(.+?)"', Path("baleropy/__meta__.py").read_text()
+          ).group(1)
+          url = f"https://pypi.org/pypi/baleropy/{version}/json"
+          try:
+              urllib.request.urlopen(url, timeout=15)
+          except urllib.error.HTTPError as error:
+              if error.code != 404:
+                  raise
+              already_published = "false"
+          else:
+              already_published = "true"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"already_published={already_published}\n")
+          print(f"Version {version} already on PyPI: {already_published}")
+          PY
       - name: Check that the tag matches the package version
         if: github.event_name == 'release'
         run: |
@@ -34,6 +63,7 @@ jobs:
 
   publish:
     needs: build
+    if: needs.build.outputs.already_published != 'true'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
