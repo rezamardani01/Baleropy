@@ -175,6 +175,27 @@ await bot.send_photo(chat_id, "an_existing_file_id")
 `FSInputFile` streams the file in chunks during upload, so it does not load the entire file into
 memory. `BufferedInputFile` and `BufferedInputFile.from_file()` keep the file contents in memory.
 
+## Keyboards
+
+Use `Button` factories and nested lists to set the keyboard rows directly:
+
+```python
+from baleropy import Button
+
+buttons = [
+    [Button.inline("Yes", "yes"), Button.inline("No", "no")],
+    [Button.url("Docs", "https://docs.bale.ai")],
+]
+await message.answer("Choose:", buttons=buttons)
+
+reply_buttons = [[Button.text("Share contact", request_contact=True)]]
+await message.answer("Your contact?", buttons=reply_buttons)
+```
+
+Each inner list is one row. `Button.text` creates reply-keyboard buttons; `Button.inline`,
+`Button.url`, `Button.web_app`, and `Button.copy_text` create inline buttons. Existing keyboard
+builders and `reply_markup=` calls remain supported.
+
 ## Colored buttons
 
 Bale's beta clients render `success` (green), `danger` (red) and `primary` (blue) buttons.

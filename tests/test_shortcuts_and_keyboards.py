@@ -4,8 +4,10 @@ from typing import Any
 
 import pytest
 
+from baleropy import Button
 from baleropy.filters import CallbackData
-from baleropy.types import CallbackQuery, Message
+from baleropy.types import CallbackQuery, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup
+from baleropy.types.markup import _build_reply_markup
 from baleropy.utils import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 
@@ -47,6 +49,17 @@ async def test_answer_and_reply() -> None:
         (42, "a"),
         {"reply_to_message_id": None, "reply_markup": None},
     )
+    assert bot.calls[1][2]["reply_to_message_id"] == 5
+
+
+async def test_message_shortcuts_forward_button_rows() -> None:
+    bot = RecordingBot()
+    msg = make_message(bot)
+    buttons = [[Button.inline("Yes", "yes")], [Button.inline("No", "no")]]
+    await msg.answer("Choose", buttons=buttons)
+    await msg.reply("Choose again", buttons=buttons)
+    assert bot.calls[0][2]["buttons"] == buttons
+    assert bot.calls[1][2]["buttons"] == buttons
     assert bot.calls[1][2]["reply_to_message_id"] == 5
 
 
@@ -145,6 +158,40 @@ def test_reply_builder_serialization() -> None:
     )
     dumped = markup.model_dump(exclude_none=True)
     assert dumped == {"keyboard": [[{"text": "Share", "request_contact": True}, {"text": "Plain"}]]}
+
+
+def test_button_factories_and_rows() -> None:
+    class Page(CallbackData, prefix="p"):
+        n: int
+
+    callback = Button.inline("Next", Page(n=2), style="success")
+    url = Button.url("Website", "https://ble.ir")
+    inline = _build_reply_markup([callback, url])
+    assert isinstance(inline, InlineKeyboardMarkup)
+    assert [[button.text for button in row] for row in inline.inline_keyboard] == [
+        ["Next", "Website"]
+    ]
+    assert inline.inline_keyboard[0][0].callback_data == "p:2"
+
+    reply = _build_reply_markup(
+        [[Button.text("Share", request_contact=True)], [Button.text("Cancel")]]
+    )
+    assert isinstance(reply, ReplyKeyboardMarkup)
+    assert [len(row) for row in reply.keyboard] == [1, 1]
+    assert reply.keyboard[0][0].request_contact is True
+
+
+def test_button_rows_reject_invalid_mixes_and_limits() -> None:
+    with pytest.raises(ValueError, match="mix inline and reply"):
+        _build_reply_markup([[Button.inline("Inline", "x"), Button.text("Reply")]])
+    with pytest.raises(TypeError, match="flat buttons and button rows"):
+        _build_reply_markup([Button.inline("Inline", "x"), [Button.inline("Nested", "y")]])
+    with pytest.raises(ValueError, match="at most 8"):
+        _build_reply_markup([Button.inline(str(i), str(i)) for i in range(9)])
+    with pytest.raises(ValueError, match="at most 100"):
+        _build_reply_markup(
+            [[Button.text(f"{row}-{column}") for column in range(8)] for row in range(13)]
+        )
 
 
 def test_colored_buttons_serialize_style() -> None:

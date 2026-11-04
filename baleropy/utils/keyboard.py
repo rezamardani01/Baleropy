@@ -13,11 +13,66 @@ from ..types import (
     ReplyKeyboardMarkup,
     WebAppInfo,
 )
+from ..types.markup import MAX_BUTTONS, MAX_WIDTH
 
 B = TypeVar("B", InlineKeyboardButton, KeyboardButton)
 
-MAX_WIDTH = 8
-MAX_BUTTONS = 100
+
+class Button:
+    """Create inline and reply keyboard buttons for ``buttons=`` arguments."""
+
+    @staticmethod
+    def inline(
+        text: str,
+        data: str | CallbackData,
+        *,
+        style: ButtonStyle | str | None = None,
+    ) -> InlineKeyboardButton:
+        """Create an inline button that sends callback data."""
+        if isinstance(data, CallbackData):
+            data = data.pack()
+        return InlineKeyboardButton(text=text, callback_data=data, style=style)
+
+    @staticmethod
+    def url(
+        text: str, url: str, *, style: ButtonStyle | str | None = None
+    ) -> InlineKeyboardButton:
+        """Create an inline button that opens a URL."""
+        return InlineKeyboardButton(text=text, url=url, style=style)
+
+    @staticmethod
+    def web_app(
+        text: str, url: str, *, style: ButtonStyle | str | None = None
+    ) -> InlineKeyboardButton:
+        """Create an inline button that opens a web app."""
+        return InlineKeyboardButton(text=text, web_app=WebAppInfo(url=url), style=style)
+
+    @staticmethod
+    def copy_text(
+        text: str, value: str, *, style: ButtonStyle | str | None = None
+    ) -> InlineKeyboardButton:
+        """Create an inline button that copies text to the user's clipboard."""
+        return InlineKeyboardButton(text=text, copy_text=CopyTextButton(text=value), style=style)
+
+    @staticmethod
+    def text(
+        text: str,
+        *,
+        request_contact: bool | None = None,
+        request_location: bool | None = None,
+        web_app: WebAppInfo | str | None = None,
+        style: ButtonStyle | str | None = None,
+    ) -> KeyboardButton:
+        """Create a reply-keyboard button that sends text or requests user data."""
+        if isinstance(web_app, str):
+            web_app = WebAppInfo(url=web_app)
+        return KeyboardButton(
+            text=text,
+            request_contact=request_contact,
+            request_location=request_location,
+            web_app=web_app,
+            style=style,
+        )
 
 
 class _KeyboardBuilder(Generic[B]):

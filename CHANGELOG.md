@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - Serialize FSM processing for updates sharing a storage key within the same process.
 - Add `@dp.unknown()` handlers for update types not modeled by the library.
 - Stream `FSInputFile` uploads in chunks instead of loading the whole file into memory.
+- Add Telethon-style `Button` factories and nested rows via `buttons=` on message shortcuts.
 
 ## 0.2.0
 
