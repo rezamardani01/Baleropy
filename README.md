@@ -13,7 +13,7 @@ familiar to [aiogram](https://github.com/aiogram/aiogram) users.
 - **Polling and webhook** runners, 429 auto-retry, graceful shutdown.
 - **Colored buttons** (`style=`), deep links, Markdown helpers, Business API, flood control.
 - Python **3.10+**, strict `mypy`, tested on 3.10 and 3.15.
-- 📘 **Full documentation (Persian + English): https://rezamardani01.github.io/balegram-docs/**
+- 📘 **Full documentation (Persian + English): https://rezamardani01.github.io/baleropy-docs/**
 
 ## Install
 
