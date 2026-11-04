@@ -11,6 +11,7 @@ from ..types import (
 )
 from ..types.input_file import InputFile
 from .base import BaleMethod
+from .limits import CallbackText, Caption, Text
 
 ChatId = int | str
 FileInput = InputFile | str
@@ -22,7 +23,7 @@ class SendMessage(BaleMethod[Message]):
     __returning__: ClassVar = Message
 
     chat_id: ChatId
-    text: str
+    text: Text
     reply_to_message_id: int | None = None
     reply_markup: ReplyMarkup | None = None
 
@@ -49,7 +50,7 @@ class _SendMedia(BaleMethod[Message]):
     __returning__: ClassVar = Message
 
     chat_id: ChatId
-    caption: str | None = None
+    caption: Caption | None = None
     reply_to_message_id: int | None = None
     reply_markup: ReplyMarkup | None = None
 
@@ -127,7 +128,7 @@ class EditMessageText(BaleMethod[Message | bool]):
 
     chat_id: ChatId
     message_id: int
-    text: str
+    text: Text
     reply_markup: InlineKeyboardMarkup | None = None
 
 
@@ -137,7 +138,7 @@ class EditMessageCaption(BaleMethod[Message | bool]):
 
     chat_id: ChatId
     message_id: int
-    caption: str | None = None
+    caption: Caption | None = None
     reply_markup: InlineKeyboardMarkup | None = None
 
 
@@ -163,5 +164,5 @@ class AnswerCallbackQuery(BaleMethod[bool]):
     __returning__: ClassVar = bool
 
     callback_query_id: str
-    text: str | None = None
+    text: CallbackText | None = None
     show_alert: bool | None = None
