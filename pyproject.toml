@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "balegram"
+name = "balegram-api"
 dynamic = ["version"]
 description = "Modern, fully-typed, asynchronous framework for the Bale Bot API"
 readme = "README.md"

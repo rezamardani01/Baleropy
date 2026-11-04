@@ -2,7 +2,7 @@ name: Publish to PyPI
 
 # Publishes with PyPI "Trusted Publishing" (OIDC): no API token is stored anywhere.
 # One-time setup on pypi.org: Account -> Publishing -> add a pending publisher
-#   project: balegram | owner: rezamardani01 | repo: balegram
+#   project: balegram-api | owner: rezamardani01 | repo: balegram
 #   workflow: publish.yml | environment: pypi
 # Then create a GitHub Release (tag v<version>) to publish.
 

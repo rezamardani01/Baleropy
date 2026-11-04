@@ -2,6 +2,7 @@
 
 ## 0.2.0
 
+- Published on PyPI as **`balegram-api`** (`pip install balegram-api`); the import name stays `balegram`.
 - Colored buttons: `style` on inline/reply buttons (`ButtonStyle`), `style=` in the keyboard builders.
 - Chat ids are always sent as strings (Bale rejects an integer `chat_id` on `sendChatAction`).
 - 429 handling: retry by default, one pause shared by all requests of a bot, bounded attempts.
