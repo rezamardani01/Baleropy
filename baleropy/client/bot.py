@@ -27,7 +27,7 @@ from ..types import (
     WebhookInfo,
 )
 from ..types.input_file import InputFile
-from ..types.markup import ButtonRows, _build_reply_markup
+from ..types.markup import ButtonRows, _build_inline_markup, _build_reply_markup
 from .server import BUSINESS, PRODUCTION, ApiServer
 from .session.aiohttp import AiohttpSession
 from .session.base import BaseSession
@@ -342,7 +342,13 @@ class Bot:
         message_id: int,
         text: str,
         reply_markup: InlineKeyboardMarkup | None = None,
+        *,
+        buttons: ButtonRows | None = None,
     ) -> Message | bool:
+        if buttons is not None:
+            if reply_markup is not None:
+                raise ValueError("Use either buttons or reply_markup, not both")
+            reply_markup = _build_inline_markup(buttons)
         return await self(
             m.EditMessageText(
                 chat_id=chat_id, message_id=message_id, text=text, reply_markup=reply_markup
@@ -355,7 +361,13 @@ class Bot:
         message_id: int,
         caption: str | None = None,
         reply_markup: InlineKeyboardMarkup | None = None,
+        *,
+        buttons: ButtonRows | None = None,
     ) -> Message | bool:
+        if buttons is not None:
+            if reply_markup is not None:
+                raise ValueError("Use either buttons or reply_markup, not both")
+            reply_markup = _build_inline_markup(buttons)
         return await self(
             m.EditMessageCaption(
                 chat_id=chat_id, message_id=message_id, caption=caption, reply_markup=reply_markup
@@ -367,7 +379,13 @@ class Bot:
         chat_id: ChatId,
         message_id: int,
         reply_markup: InlineKeyboardMarkup | None = None,
+        *,
+        buttons: ButtonRows | None = None,
     ) -> Message | bool:
+        if buttons is not None:
+            if reply_markup is not None:
+                raise ValueError("Use either buttons or reply_markup, not both")
+            reply_markup = _build_inline_markup(buttons)
         return await self(
             m.EditMessageReplyMarkup(
                 chat_id=chat_id, message_id=message_id, reply_markup=reply_markup

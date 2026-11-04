@@ -7,7 +7,7 @@ import pytest
 from baleropy import Button
 from baleropy.filters import CallbackData
 from baleropy.types import CallbackQuery, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup
-from baleropy.types.markup import _build_reply_markup
+from baleropy.types.markup import _build_inline_markup, _build_reply_markup
 from baleropy.utils import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 
@@ -61,6 +61,30 @@ async def test_message_shortcuts_forward_button_rows() -> None:
     assert bot.calls[0][2]["buttons"] == buttons
     assert bot.calls[1][2]["buttons"] == buttons
     assert bot.calls[1][2]["reply_to_message_id"] == 5
+
+
+async def test_edit_shortcuts_forward_inline_button_rows() -> None:
+    bot = RecordingBot()
+    msg = make_message(bot)
+    buttons = [[Button.inline("Yes", "yes")], [Button.inline("No", "no")]]
+    await msg.edit_text("Choose", buttons=buttons)
+    await msg.edit_caption("Caption", buttons=buttons)
+    await msg.edit_reply_markup(buttons=buttons)
+    assert bot.calls[0] == (
+        "edit_message_text",
+        (42, 5, "Choose", None),
+        {"buttons": buttons},
+    )
+    assert bot.calls[1] == (
+        "edit_message_caption",
+        (42, 5, "Caption", None),
+        {"buttons": buttons},
+    )
+    assert bot.calls[2] == (
+        "edit_message_reply_markup",
+        (42, 5, None),
+        {"buttons": buttons},
+    )
 
 
 async def test_edit_delete_forward_copy() -> None:
@@ -192,6 +216,8 @@ def test_button_rows_reject_invalid_mixes_and_limits() -> None:
         _build_reply_markup(
             [[Button.text(f"{row}-{column}") for column in range(8)] for row in range(13)]
         )
+    with pytest.raises(ValueError, match="only supports inline"):
+        _build_inline_markup([[Button.text("Reply")]])
 
 
 def test_colored_buttons_serialize_style() -> None:

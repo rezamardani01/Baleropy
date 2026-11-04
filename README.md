@@ -202,18 +202,17 @@ Bale's beta clients render `success` (green), `danger` (red) and `primary` (blue
 Older clients ignore `style` and show a normal button.
 
 ```python
-from baleropy.types import ButtonStyle
-from baleropy.utils import InlineKeyboardBuilder
+from baleropy import Button
 
-kb = InlineKeyboardBuilder()
-kb.button(text="Accept", callback_data="ok", style=ButtonStyle.SUCCESS)
-kb.button(text="Reject", callback_data="no", style="danger")  # plain strings work too
-kb.button(text="More", callback_data="more", style=ButtonStyle.PRIMARY)
-await message.answer("Choose:", reply_markup=kb.adjust(2, 1).as_markup())
+buttons = [
+    [Button.inline("Accept", "ok", style="success"), Button.inline("Reject", "no", style="danger")],
+    [Button.inline("More", "more", style="primary")],
+]
+await message.answer("Choose:", buttons=buttons)
 ```
 
-`ReplyKeyboardBuilder.button(..., style=...)` accepts the same argument (only inline buttons are
-confirmed to render colors so far).
+Each nested list is one row; the same layout works for reply keyboards with `Button.text(...)`.
+No layout adjustment step is needed. Only inline button colors are confirmed to render so far.
 
 ## Bot links, formatting and other helpers
 

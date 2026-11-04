@@ -106,6 +106,29 @@ async def test_send_message_accepts_nested_button_rows(make_bot: Any) -> None:
     ]
 
 
+async def test_edit_message_accepts_nested_inline_button_rows(make_bot: Any) -> None:
+    seen: list[dict[str, Any]] = []
+
+    async def handler(request: web.Request) -> web.Response:
+        seen.append(await request.json())
+        return web.json_response({"ok": True, "result": True})
+
+    bot = await make_bot(handler)
+    buttons = [[Button.inline("Yes", "yes")], [Button.inline("No", "no")]]
+    await bot.edit_message_text(5, 7, "Choose", buttons=buttons)
+    await bot.edit_message_caption(5, 7, "Caption", buttons=buttons)
+    await bot.edit_message_reply_markup(5, 7, buttons=buttons)
+    expected = [
+        [{"text": "Yes", "callback_data": "yes"}],
+        [{"text": "No", "callback_data": "no"}],
+    ]
+    assert [request["reply_markup"]["inline_keyboard"] for request in seen] == [
+        expected,
+        expected,
+        expected,
+    ]
+
+
 async def test_errors_are_mapped(make_bot: Any) -> None:
     async def handler(request: web.Request) -> web.Response:
         method = request.match_info["method"]
