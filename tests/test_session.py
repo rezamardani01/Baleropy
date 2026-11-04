@@ -7,7 +7,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 
-from baleropy import Bot
+from baleropy import Bot, Button
 from baleropy.client.server import ApiServer
 from baleropy.client.session.aiohttp import AiohttpSession
 from baleropy.exceptions import BaleBadRequest, BaleRetryAfter, BaleUnauthorized, ClientDecodeError
@@ -77,6 +77,33 @@ async def test_send_message_sends_json_without_nones(make_bot: Any) -> None:
     msg = await bot.send_message(5, "hi")
     assert seen == {"chat_id": "5", "text": "hi"}
     assert msg.message_id == 7
+
+
+async def test_send_message_accepts_nested_button_rows(make_bot: Any) -> None:
+    seen: dict[str, Any] = {}
+
+    async def handler(request: web.Request) -> web.Response:
+        seen.update(await request.json())
+        return web.json_response(
+            {
+                "ok": True,
+                "result": {"message_id": 7, "date": 1, "chat": {"id": 5, "type": "private"}},
+            }
+        )
+
+    bot = await make_bot(handler)
+    await bot.send_message(
+        5,
+        "Choose:",
+        buttons=[
+            [Button.inline("One", "1"), Button.inline("Two", "2")],
+            [Button.url("Docs", "https://docs.bale.ai")],
+        ],
+    )
+    assert seen["reply_markup"]["inline_keyboard"] == [
+        [{"text": "One", "callback_data": "1"}, {"text": "Two", "callback_data": "2"}],
+        [{"text": "Docs", "url": "https://docs.bale.ai"}],
+    ]
 
 
 async def test_errors_are_mapped(make_bot: Any) -> None:

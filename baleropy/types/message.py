@@ -9,7 +9,7 @@ from pydantic import Field
 from .base import BoundObject
 from .chat import Chat, ChatAction, User
 from .input_file import InputFile
-from .markup import InlineKeyboardMarkup, ReplyMarkup
+from .markup import ButtonRows, InlineKeyboardMarkup, ReplyMarkup
 from .media import (
     Animation,
     Audio,
@@ -107,9 +107,22 @@ class Message(BoundObject):
         return None
 
     async def answer(
-        self, text: str, reply_markup: ReplyMarkup | None = None, *, reply: bool = False
+        self,
+        text: str,
+        reply_markup: ReplyMarkup | None = None,
+        *,
+        reply: bool = False,
+        buttons: ButtonRows | None = None,
     ) -> Message:
         """Send a message to the same chat (``reply=True`` quotes this message)."""
+        if buttons is not None:
+            return await self.bot.send_message(
+                self.chat.id,
+                text,
+                reply_to_message_id=self.message_id if reply else None,
+                reply_markup=reply_markup,
+                buttons=buttons,
+            )
         return await self.bot.send_message(
             self.chat.id,
             text,
@@ -117,8 +130,14 @@ class Message(BoundObject):
             reply_markup=reply_markup,
         )
 
-    async def reply(self, text: str, reply_markup: ReplyMarkup | None = None) -> Message:
-        return await self.answer(text, reply_markup, reply=True)
+    async def reply(
+        self,
+        text: str,
+        reply_markup: ReplyMarkup | None = None,
+        *,
+        buttons: ButtonRows | None = None,
+    ) -> Message:
+        return await self.answer(text, reply_markup, reply=True, buttons=buttons)
 
     async def answer_photo(
         self,

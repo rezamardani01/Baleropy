@@ -27,6 +27,7 @@ from ..types import (
     WebhookInfo,
 )
 from ..types.input_file import InputFile
+from ..types.markup import ButtonRows, _build_reply_markup
 from .server import BUSINESS, PRODUCTION, ApiServer
 from .session.aiohttp import AiohttpSession
 from .session.base import BaseSession
@@ -127,7 +128,13 @@ class Bot:
         text: str,
         reply_to_message_id: int | None = None,
         reply_markup: ReplyMarkup | None = None,
+        *,
+        buttons: ButtonRows | None = None,
     ) -> Message:
+        if buttons is not None:
+            if reply_markup is not None:
+                raise ValueError("Use either buttons or reply_markup, not both")
+            reply_markup = _build_reply_markup(buttons)
         return await self(
             m.SendMessage(
                 chat_id=chat_id,
