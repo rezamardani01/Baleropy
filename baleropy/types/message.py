@@ -301,8 +301,21 @@ class Update(BoundObject):
         return "unknown"
 
     @property
-    def event(self) -> Message | CallbackQuery | PreCheckoutQuery | None:
-        return getattr(self, self.event_type, None)
+    def event(self) -> Message | CallbackQuery | PreCheckoutQuery | Update:
+        if self.message is not None:
+            return self.message
+        if self.edited_message is not None:
+            return self.edited_message
+        if self.callback_query is not None:
+            return self.callback_query
+        if self.pre_checkout_query is not None:
+            return self.pre_checkout_query
+        return self
+
+    @property
+    def unknown_event_types(self) -> dict[str, Any]:
+        """Extra update fields not modeled by this version of the library."""
+        return self.model_extra or {}
 
 
 Message.model_rebuild()

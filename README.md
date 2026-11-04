@@ -138,6 +138,25 @@ async def name(message: Message, state: FSMContext):
     await state.set_state(Form.age)
 ```
 
+Updates for the same FSM key (by default, the same user in the same chat) are processed one at a time
+within a process. This does not coordinate separate bot processes or workers; use distributed locking
+if those share the same FSM storage.
+
+## Unknown updates
+
+When Bale sends an update type this version does not recognize, it can be handled with a catch-all
+handler. The original `Update` is passed to the handler, and unmodeled fields are available in
+`unknown_event_types`:
+
+```python
+from baleropy.types import Update
+
+
+@dp.unknown()
+async def handle_unknown(update: Update):
+    print(update.unknown_event_types)
+```
+
 ## Webhook
 
 See [`examples/webhook_bot.py`](https://github.com/rezamardani01/Baleropy/blob/main/examples/webhook_bot.py). Bale webhooks need HTTPS on port 443 or 88
@@ -152,6 +171,9 @@ await bot.send_document(chat_id, FSInputFile("report.pdf"))
 await bot.send_photo(chat_id, BufferedInputFile(data, "pic.png"), caption="hi")
 await bot.send_photo(chat_id, "an_existing_file_id")
 ```
+
+`FSInputFile` streams the file in chunks during upload, so it does not load the entire file into
+memory. `BufferedInputFile` and `BufferedInputFile.from_file()` keep the file contents in memory.
 
 ## Colored buttons
 
