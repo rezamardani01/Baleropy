@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from baleropy import Bot
@@ -130,6 +131,26 @@ async def test_state_is_isolated_per_user() -> None:
     await dp.feed_update(bot, update("/go", user=1))
     assert await dp.feed_update(bot, update("x", user=1)) == "in-form"
     assert await dp.feed_update(bot, update("x", user=2)) is UNHANDLED
+
+
+async def test_concurrent_updates_for_same_state_are_serialized() -> None:
+    bot = Bot("1:abc")
+    dp = Dispatcher()
+    state = FSMContext(dp.storage, StorageKey(bot.id, 1, 1))
+    await state.set_state(Form.name)
+
+    @dp.message(Form.name)
+    async def increment(state: FSMContext) -> None:
+        count = await state.get_value("count", 0)
+        await asyncio.sleep(0)
+        await state.update_data(count=count + 1)
+
+    await asyncio.gather(
+        dp.feed_update(bot, update("one", update_id=1)),
+        dp.feed_update(bot, update("two", update_id=2)),
+    )
+
+    assert await state.get_value("count") == 2
 
 
 async def test_state_filter_group_and_wildcard() -> None:

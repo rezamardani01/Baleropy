@@ -44,7 +44,8 @@ class AiohttpSession(BaseSession):
             for key, value in data.items():
                 form.add_field(key, _form_value(value))
             for key, file in files.items():
-                form.add_field(key, await file.read(), filename=file.filename)
+                payload = aiohttp.payload.AsyncIterablePayload(file.chunks())
+                form.add_field(key, payload, filename=file.filename)
             kwargs["data"] = form
         else:
             kwargs["json"] = data

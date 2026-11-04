@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from pathlib import Path
 
 DEFAULT_FILENAME = "file"
@@ -15,6 +16,10 @@ class InputFile(ABC):
 
     @abstractmethod
     async def read(self) -> bytes: ...
+
+    async def chunks(self, chunk_size: int = 65536) -> AsyncIterator[bytes]:
+        """Read the file in chunks. Buffered files return their data as a single chunk."""
+        yield await self.read()
 
 
 class BufferedInputFile(InputFile):
@@ -32,7 +37,7 @@ class BufferedInputFile(InputFile):
 
 
 class FSInputFile(InputFile):
-    """Lazily reads a file from disk when the request is sent."""
+    """Streams a file from disk when the request is sent."""
 
     def __init__(self, path: str | Path, filename: str | None = None) -> None:
         path = Path(path)
@@ -41,3 +46,8 @@ class FSInputFile(InputFile):
 
     async def read(self) -> bytes:
         return await asyncio.to_thread(self.path.read_bytes)
+
+    async def chunks(self, chunk_size: int = 65536) -> AsyncIterator[bytes]:
+        with self.path.open("rb") as file:
+            while chunk := await asyncio.to_thread(file.read, chunk_size):
+                yield chunk

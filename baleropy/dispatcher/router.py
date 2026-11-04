@@ -8,7 +8,14 @@ from .event.handler import CallableObject
 from .event.observer import EventObserver
 from .middlewares.base import wrap_middlewares
 
-EVENT_TYPES = ("message", "edited_message", "callback_query", "pre_checkout_query", "error")
+EVENT_TYPES = (
+    "message",
+    "edited_message",
+    "callback_query",
+    "pre_checkout_query",
+    "unknown",
+    "error",
+)
 
 
 class Router:
@@ -23,12 +30,14 @@ class Router:
         self.edited_message = EventObserver(self, "edited_message")
         self.callback_query = EventObserver(self, "callback_query")
         self.pre_checkout_query = EventObserver(self, "pre_checkout_query")
+        self.unknown = EventObserver(self, "unknown")
         self.error = EventObserver(self, "error")
         self.observers: dict[str, EventObserver] = {
             "message": self.message,
             "edited_message": self.edited_message,
             "callback_query": self.callback_query,
             "pre_checkout_query": self.pre_checkout_query,
+            "unknown": self.unknown,
             "error": self.error,
         }
         self.startup_callbacks: list[CallableObject] = []

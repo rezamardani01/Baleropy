@@ -218,3 +218,18 @@ def test_feed_unknown_update_is_unhandled() -> None:
     bot = Bot("1:abc")
     result = asyncio.run(dp.feed_update(bot, Update(update_id=1)))
     assert result is UNHANDLED
+
+
+async def test_unknown_update_reaches_catch_all_handler() -> None:
+    bot = Bot("1:abc")
+    dp = Dispatcher()
+    unknown: list[dict[str, Any]] = []
+
+    @dp.unknown()
+    async def handle(update: Update) -> None:
+        unknown.append(update.unknown_event_types)
+
+    update = Update.model_validate({"update_id": 1, "future_event": {"value": 42}})
+    await dp.feed_update(bot, update)
+
+    assert unknown == [{"future_event": {"value": 42}}]

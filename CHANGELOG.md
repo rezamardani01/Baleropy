@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Serialize FSM processing for updates sharing a storage key within the same process.
+- Add `@dp.unknown()` handlers for update types not modeled by the library.
+- Stream `FSInputFile` uploads in chunks instead of loading the whole file into memory.
+
 ## 0.2.0
 
 - Published on PyPI as **`balegram-api`** (`pip install balegram-api`); the import name stays `balegram`.

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -15,6 +17,12 @@ class FSMStrategy(str, Enum):
     GLOBAL_USER = "global_user"  # one state per user across all chats
 
 
+@dataclass
+class _LockEntry:
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    users: int = 0
+
+
 class FSMContextMiddleware(BaseMiddleware):
     """Injects ``state`` (:class:`FSMContext`) and ``raw_state`` into handler data."""
 
@@ -23,6 +31,7 @@ class FSMContextMiddleware(BaseMiddleware):
     ) -> None:
         self.storage = storage
         self.strategy = strategy
+        self._locks: dict[tuple[asyncio.AbstractEventLoop, StorageKey], _LockEntry] = {}
 
     def resolve_key(
         self, bot_id: int, chat_id: int | None, user_id: int | None
@@ -42,9 +51,28 @@ class FSMContextMiddleware(BaseMiddleware):
         chat = data.get("event_chat")
         user = data.get("event_from_user")
         key = self.resolve_key(data["bot"].id, chat.id if chat else None, user.id if user else None)
-        if key is not None:
-            context = FSMContext(self.storage, key)
-            data["state"] = context
-            data["raw_state"] = await context.get_state()
-        data["fsm_storage"] = self.storage
-        return await handler(event, data)
+
+        async def process() -> Any:
+            if key is not None:
+                context = FSMContext(self.storage, key)
+                data["state"] = context
+                data["raw_state"] = await context.get_state()
+            data["fsm_storage"] = self.storage
+            return await handler(event, data)
+
+        if key is None:
+            return await process()
+
+        loop = asyncio.get_running_loop()
+        lock_key = (loop, key)
+        entry = self._locks.get(lock_key)
+        if entry is None:
+            entry = self._locks[lock_key] = _LockEntry()
+        entry.users += 1
+        try:
+            async with entry.lock:
+                return await process()
+        finally:
+            entry.users -= 1
+            if entry.users == 0:
+                del self._locks[lock_key]

@@ -70,8 +70,6 @@ class Dispatcher(Router):
 
         async def listen(upd: Update, ctx: Data) -> Any:
             event_type = upd.event_type
-            if event_type == "unknown":
-                return UNHANDLED
             try:
                 return await self.propagate_event(event_type, upd.event, **ctx)
             except CancelHandler:

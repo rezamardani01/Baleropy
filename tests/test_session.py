@@ -13,7 +13,7 @@ from baleropy.client.session.aiohttp import AiohttpSession
 from baleropy.exceptions import BaleBadRequest, BaleRetryAfter, BaleUnauthorized, ClientDecodeError
 from baleropy.methods import GetMe, SendMediaGroup, SendMessage, SendPhoto
 from baleropy.methods.media_group import InputMediaPhoto
-from baleropy.types import BufferedInputFile, User
+from baleropy.types import BufferedInputFile, FSInputFile, User
 
 TOKEN = "123:abc"
 Handler = Callable[[web.Request], Awaitable[web.StreamResponse]]
@@ -150,6 +150,38 @@ async def test_multipart_upload(make_bot: Any) -> None:
     bot = await make_bot(handler)
     await bot.send_photo(1, BufferedInputFile(b"PNG", "a.png"), caption="c")
     assert seen == {"chat_id": "1", "name": "a.png", "bytes": b"PNG"}
+
+
+async def test_filesystem_upload_streams_without_reading_whole_file(
+    make_bot: Any, tmp_path: Any, monkeypatch: Any
+) -> None:
+    content = b"streamed content " * 16384
+    path = tmp_path / "large.bin"
+    path.write_bytes(content)
+    file = FSInputFile(path)
+    seen: dict[str, Any] = {}
+
+    async def unexpected_read() -> bytes:
+        raise AssertionError("FSInputFile.read should not be used by multipart uploads")
+
+    monkeypatch.setattr(file, "read", unexpected_read)
+
+    async def handler(request: web.Request) -> web.Response:
+        form = await request.post()
+        upload = form["document"]
+        assert isinstance(upload, web.FileField)
+        seen["name"] = upload.filename
+        seen["bytes"] = upload.file.read()
+        return web.json_response(
+            {
+                "ok": True,
+                "result": {"message_id": 1, "date": 1, "chat": {"id": 1, "type": "private"}},
+            }
+        )
+
+    bot = await make_bot(handler)
+    await bot.send_document(1, file)
+    assert seen == {"name": "large.bin", "bytes": content}
 
 
 def test_media_group_attaches_files() -> None:
