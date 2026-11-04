@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- Accept nested `buttons=` rows when editing message text, captions, and inline keyboards.
+- Update keyboard examples to use explicit `Button.inline` and `Button.text` rows without `adjust()`.
+
 ## 0.3.0
 
 - Serialize FSM processing for updates sharing a storage key within the same process.

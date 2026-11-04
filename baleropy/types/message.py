@@ -241,21 +241,36 @@ class Message(BoundObject):
         return await self.bot.send_chat_action(self.chat.id, action)
 
     async def edit_text(
-        self, text: str, reply_markup: InlineKeyboardMarkup | None = None
+        self,
+        text: str,
+        reply_markup: InlineKeyboardMarkup | None = None,
+        *,
+        buttons: ButtonRows | None = None,
     ) -> Message | bool:
-        return await self.bot.edit_message_text(self.chat.id, self.message_id, text, reply_markup)
+        return await self.bot.edit_message_text(
+            self.chat.id, self.message_id, text, reply_markup, buttons=buttons
+        )
 
     async def edit_caption(
-        self, caption: str | None = None, reply_markup: InlineKeyboardMarkup | None = None
+        self,
+        caption: str | None = None,
+        reply_markup: InlineKeyboardMarkup | None = None,
+        *,
+        buttons: ButtonRows | None = None,
     ) -> Message | bool:
         return await self.bot.edit_message_caption(
-            self.chat.id, self.message_id, caption, reply_markup
+            self.chat.id, self.message_id, caption, reply_markup, buttons=buttons
         )
 
     async def edit_reply_markup(
-        self, reply_markup: InlineKeyboardMarkup | None = None
+        self,
+        reply_markup: InlineKeyboardMarkup | None = None,
+        *,
+        buttons: ButtonRows | None = None,
     ) -> Message | bool:
-        return await self.bot.edit_message_reply_markup(self.chat.id, self.message_id, reply_markup)
+        return await self.bot.edit_message_reply_markup(
+            self.chat.id, self.message_id, reply_markup, buttons=buttons
+        )
 
     async def delete(self) -> bool:
         return await self.bot.delete_message(self.chat.id, self.message_id)

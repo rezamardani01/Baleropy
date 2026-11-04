@@ -125,6 +125,14 @@ def _build_reply_markup(buttons: ButtonRows | ReplyMarkup | None) -> ReplyMarkup
         reply_rows.append(reply_row)
     return ReplyKeyboardMarkup(keyboard=reply_rows)
 
+
+def _build_inline_markup(buttons: ButtonRows | None) -> InlineKeyboardMarkup | None:
+    markup = _build_reply_markup(buttons)
+    if markup is not None and not isinstance(markup, InlineKeyboardMarkup):
+        raise ValueError("Message editing only supports inline keyboard buttons")
+    return markup
+
+
 __all__ = [
     "ButtonStyle",
     "ButtonItem",
