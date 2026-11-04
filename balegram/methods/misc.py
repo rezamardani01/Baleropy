@@ -1,11 +1,19 @@
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import Annotated, ClassVar
+
+from pydantic import Field
 
 from ..types import File, LabeledPrice, Message, StickerSet, Transaction, Update, User, WebhookInfo
 from ..types.base import BaleObject
 from ..types.input_file import InputFile
 from .base import BaleMethod
+from .limits import (
+    InvoiceDescription,
+    InvoicePayload,
+    InvoiceTitle,
+    StickerName,
+)
 
 ChatId = int | str
 
@@ -72,9 +80,9 @@ class CreateNewStickerSet(BaleMethod[bool]):
     __api_method__: ClassVar[str] = "createNewStickerSet"
     __returning__: ClassVar = bool
     user_id: int
-    name: str
-    title: str
-    stickers: list[InputSticker]
+    name: StickerName
+    title: StickerName
+    stickers: Annotated[list[InputSticker], Field(min_length=1, max_length=50)]
 
 
 class AddStickerToSet(BaleMethod[bool]):
@@ -96,9 +104,9 @@ class SendInvoice(BaleMethod[Message]):
     __api_method__: ClassVar[str] = "sendInvoice"
     __returning__: ClassVar = Message
     chat_id: ChatId
-    title: str
-    description: str
-    payload: str
+    title: InvoiceTitle
+    description: InvoiceDescription
+    payload: InvoicePayload
     provider_token: str
     prices: list[LabeledPrice]
     photo_url: str | None = None
@@ -108,9 +116,9 @@ class SendInvoice(BaleMethod[Message]):
 class CreateInvoiceLink(BaleMethod[str]):
     __api_method__: ClassVar[str] = "createInvoiceLink"
     __returning__: ClassVar = str
-    title: str
-    description: str
-    payload: str
+    title: InvoiceTitle
+    description: InvoiceDescription
+    payload: InvoicePayload
     provider_token: str
     prices: list[LabeledPrice]
 

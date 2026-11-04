@@ -6,13 +6,14 @@ from ..types import Message
 from ..types.base import BaleObject
 from ..types.input_file import InputFile
 from .base import BaleMethod
+from .limits import MediaCaption
 
 
 class InputMedia(BaleObject):
     model_config = BaleObject.model_config | {"arbitrary_types_allowed": True}
 
     media: InputFile | str
-    caption: str | None = None
+    caption: MediaCaption | None = None
     thumbnail: InputFile | str | None = None
 
 
