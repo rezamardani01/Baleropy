@@ -2,10 +2,9 @@
 
 import asyncio
 
-from baleropy import Bot, Dispatcher, F
+from baleropy import Bot, Button, Dispatcher, F
 from baleropy.filters import CommandStart
 from baleropy.types import ButtonStyle, CallbackQuery, Message
-from baleropy.utils import InlineKeyboardBuilder
 
 # Get a token from @botfather (https://ble.ir/botfather) and paste it here.
 TOKEN = "YOUR_BOT_TOKEN"
@@ -15,13 +14,15 @@ dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def start(message: Message) -> None:
-    kb = InlineKeyboardBuilder()
-    kb.button(text="دکمه سبز", callback_data="green", style=ButtonStyle.SUCCESS)
-    kb.button(text="دکمه قرمز", callback_data="red", style=ButtonStyle.DANGER)
-    kb.button(text="دکمه آبی", callback_data="blue", style=ButtonStyle.PRIMARY)
-    kb.button(text="دکمه معمولی", callback_data="plain")  # no style: the default look
-    kb.adjust(2, 1, 1)
-    await message.answer("تست دکمه‌های رنگی بله 🎨", reply_markup=kb.as_markup())
+    buttons = [
+        [
+            Button.inline("دکمه سبز", "green", style=ButtonStyle.SUCCESS),
+            Button.inline("دکمه قرمز", "red", style=ButtonStyle.DANGER),
+        ],
+        [Button.inline("دکمه آبی", "blue", style=ButtonStyle.PRIMARY)],
+        [Button.inline("دکمه معمولی", "plain")],
+    ]
+    await message.answer("تست دکمه‌های رنگی بله 🎨", buttons=buttons)
 
 
 @dp.callback_query(F.data.in_({"green", "red", "blue", "plain"}))
