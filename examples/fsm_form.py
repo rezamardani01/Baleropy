@@ -1,12 +1,15 @@
 """Multi-step conversation with the finite state machine."""
 
 import asyncio
-import os
 
 from balegram import Bot, Dispatcher, F
 from balegram.filters import Command
 from balegram.fsm import FSMContext, MemoryStorage, State, StatesGroup
 from balegram.types import Message
+
+# Get a token from @botfather (https://ble.ir/botfather) and paste it here.
+# Never commit a real token to a public repository.
+TOKEN = "YOUR_BOT_TOKEN"
 
 dp = Dispatcher(storage=MemoryStorage())
 
@@ -48,8 +51,11 @@ async def bad_age(message: Message) -> None:
 
 
 async def main() -> None:
-    await dp.start_polling(Bot(os.environ["BALE_TOKEN"]))
+    await dp.start_polling(Bot(TOKEN), skip_updates=True)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass

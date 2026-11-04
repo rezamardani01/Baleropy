@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import os
 from typing import Any
 
 from balegram import Bot, Dispatcher, F, Router
@@ -12,7 +11,11 @@ from balegram.filters import CallbackData, Command, Filter
 from balegram.types import CallbackQuery, Message
 from balegram.utils import InlineKeyboardBuilder
 
-ADMINS = {123456789}
+# Get a token from @botfather (https://ble.ir/botfather) and paste it here.
+# Never commit a real token to a public repository.
+TOKEN = "YOUR_BOT_TOKEN"
+
+ADMINS = {123456789}  # numeric ids of the admins (ask your bot: /myid)
 
 
 # --- custom filter: returns a dict -> injected into the handler as keyword arguments ---------
@@ -83,8 +86,11 @@ async def main() -> None:
     dp.message.outer_middleware(LoggingMiddleware())
     dp.message.outer_middleware(ThrottlingMiddleware(rate=0.5))
     dp.include_routers(polls, admin, common)
-    await dp.start_polling(Bot(os.environ["BALE_TOKEN"]), skip_updates=True)
+    await dp.start_polling(Bot(TOKEN), skip_updates=True)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass
