@@ -7,13 +7,13 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 
-from balegram import Bot
-from balegram.client.server import ApiServer
-from balegram.client.session.aiohttp import AiohttpSession
-from balegram.exceptions import BaleBadRequest, BaleRetryAfter, BaleUnauthorized, ClientDecodeError
-from balegram.methods import GetMe, SendMediaGroup, SendMessage, SendPhoto
-from balegram.methods.media_group import InputMediaPhoto
-from balegram.types import BufferedInputFile, User
+from baleropy import Bot
+from baleropy.client.server import ApiServer
+from baleropy.client.session.aiohttp import AiohttpSession
+from baleropy.exceptions import BaleBadRequest, BaleRetryAfter, BaleUnauthorized, ClientDecodeError
+from baleropy.methods import GetMe, SendMediaGroup, SendMessage, SendPhoto
+from baleropy.methods.media_group import InputMediaPhoto
+from baleropy.types import BufferedInputFile, User
 
 TOKEN = "123:abc"
 Handler = Callable[[web.Request], Awaitable[web.StreamResponse]]
@@ -238,7 +238,7 @@ async def test_flood_retries_are_bounded(make_bot: Any) -> None:
 
 def test_chat_ids_are_sent_as_strings() -> None:
     """Bale answers 'chat id is empty' to an integer chat_id on sendChatAction."""
-    from balegram.methods import ForwardMessage, SendChatAction
+    from baleropy.methods import ForwardMessage, SendChatAction
 
     data, _ = SendChatAction(chat_id=1284000539, action="typing").build_request()
     assert data == {"chat_id": "1284000539", "action": "typing"}

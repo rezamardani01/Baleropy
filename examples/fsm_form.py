@@ -2,10 +2,10 @@
 
 import asyncio
 
-from balegram import Bot, Dispatcher, F
-from balegram.filters import Command
-from balegram.fsm import FSMContext, MemoryStorage, State, StatesGroup
-from balegram.types import Message
+from baleropy import Bot, Dispatcher, F
+from baleropy.filters import Command
+from baleropy.fsm import FSMContext, MemoryStorage, State, StatesGroup
+from baleropy.types import Message
 
 # Get a token from @botfather (https://ble.ir/botfather) and paste it here.
 # Never commit a real token to a public repository.

@@ -1,4 +1,4 @@
-# balegram
+# baleropy
 
 Modern, fully-typed, asynchronous framework for the [Bale](https://bale.ai) Bot API.
 Routers, middlewares, composable filters, FSM and pydantic models, with an architecture
@@ -18,22 +18,22 @@ familiar to [aiogram](https://github.com/aiogram/aiogram) users.
 ## Install
 
 ```bash
-pip install balegram-api
+pip install baleropy
 # with Redis storage for the FSM
-pip install "balegram-api[redis]"
+pip install "baleropy[redis]"
 ```
 
-The PyPI package is called **`balegram-api`**; in code you still `import balegram`.
+Install the **`baleropy`** package and import it with `import baleropy`.
 
-Latest unreleased code: `pip install git+https://github.com/rezamardani01/balegram.git`
+Latest unreleased code: `pip install git+https://github.com/rezamardani01/Baleropy.git`
 
 ## Quick start
 
 ```python
 import asyncio
-from balegram import Bot, Dispatcher, F
-from balegram.filters import CommandStart
-from balegram.types import Message
+from baleropy import Bot, Dispatcher, F
+from baleropy.filters import CommandStart
+from baleropy.types import Message
 
 TOKEN = "YOUR_BOT_TOKEN"  # get it from @botfather (https://ble.ir/botfather)
 
@@ -56,7 +56,7 @@ asyncio.run(dp.start_polling(Bot(TOKEN), skip_updates=True))
 ## Routers
 
 ```python
-from balegram import Router
+from baleropy import Router
 
 shop = Router(name="shop")
 
@@ -74,7 +74,7 @@ handler wins (raise `SkipHandler` to pass the event on).
 ## Middlewares
 
 ```python
-from balegram.dispatcher import BaseMiddleware
+from baleropy.dispatcher import BaseMiddleware
 
 
 class DbMiddleware(BaseMiddleware):
@@ -94,8 +94,8 @@ Raise `CancelHandler` inside a middleware to drop the event.
 ## Filters
 
 ```python
-from balegram import F
-from balegram.filters import Filter, Command, CallbackData, ChatTypeFilter
+from baleropy import F
+from baleropy.filters import Filter, Command, CallbackData, ChatTypeFilter
 
 
 @router.message(F.text.startswith("!"), ChatTypeFilter("group"))
@@ -119,7 +119,7 @@ class IsPremium(Filter):  # custom filter
 ## FSM
 
 ```python
-from balegram.fsm import State, StatesGroup, FSMContext
+from baleropy.fsm import State, StatesGroup, FSMContext
 
 
 class Form(StatesGroup):
@@ -140,13 +140,13 @@ async def name(message: Message, state: FSMContext):
 
 ## Webhook
 
-See [`examples/webhook_bot.py`](https://github.com/rezamardani01/balegram/blob/main/examples/webhook_bot.py). Bale webhooks need HTTPS on port 443 or 88
+See [`examples/webhook_bot.py`](https://github.com/rezamardani01/Baleropy/blob/main/examples/webhook_bot.py). Bale webhooks need HTTPS on port 443 or 88
 and send no secret header, so use `secret_path()` (or a `verify=` callback) to keep the URL private.
 
 ## Sending files
 
 ```python
-from balegram.types import FSInputFile, BufferedInputFile
+from baleropy.types import FSInputFile, BufferedInputFile
 
 await bot.send_document(chat_id, FSInputFile("report.pdf"))
 await bot.send_photo(chat_id, BufferedInputFile(data, "pic.png"), caption="hi")
@@ -159,8 +159,8 @@ Bale's beta clients render `success` (green), `danger` (red) and `primary` (blue
 Older clients ignore `style` and show a normal button.
 
 ```python
-from balegram.types import ButtonStyle
-from balegram.utils import InlineKeyboardBuilder
+from baleropy.types import ButtonStyle
+from baleropy.utils import InlineKeyboardBuilder
 
 kb = InlineKeyboardBuilder()
 kb.button(text="Accept", callback_data="ok", style=ButtonStyle.SUCCESS)
@@ -175,7 +175,7 @@ confirmed to render colors so far).
 ## Bot links, formatting and other helpers
 
 ```python
-from balegram.utils import (
+from baleropy.utils import (
     ChatActionSender,
     MediaGroupBuilder,
     bold,
@@ -225,7 +225,7 @@ most `max_concurrent_updates=50` updates at once.
 
 ## Examples
 
-[`examples/`](https://github.com/rezamardani01/balegram/tree/main/examples) holds a minimal bot, a modular bot (routers + middlewares + custom filter),
+[`examples/`](https://github.com/rezamardani01/Baleropy/tree/main/examples) holds a minimal bot, a modular bot (routers + middlewares + custom filter),
 an FSM form, colored buttons and a webhook bot. Put your token in the `TOKEN` constant at the top
 of each file. The examples are exercised by the test suite.
 
@@ -233,7 +233,7 @@ of each file. The examples are exercised by the test suite.
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
-ruff check . && mypy balegram && pytest
+ruff check . && mypy baleropy && pytest
 ```
 
 ## Notes about Bale

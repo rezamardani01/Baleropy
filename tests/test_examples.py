@@ -7,9 +7,9 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-from balegram import Bot
-from balegram.dispatcher import UNHANDLED
-from balegram.types import Update
+from baleropy import Bot
+from baleropy.dispatcher import UNHANDLED
+from baleropy.types import Update
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
 
@@ -85,8 +85,8 @@ async def test_fsm_form_example() -> None:
 
 async def test_modular_example(monkeypatch: Any) -> None:
     module = load("modular_bot")
-    from balegram import Dispatcher
-    from balegram.dispatcher.middlewares import LoggingMiddleware
+    from baleropy import Dispatcher
+    from baleropy.dispatcher.middlewares import LoggingMiddleware
 
     bot = FakeBot()
     dp = Dispatcher()

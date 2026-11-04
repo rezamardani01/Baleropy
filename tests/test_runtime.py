@@ -7,17 +7,17 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from balegram import Bot
-from balegram.client.server import ApiServer
-from balegram.client.session.aiohttp import AiohttpSession
-from balegram.dispatcher import UNHANDLED, Dispatcher
-from balegram.dispatcher.middlewares import (
+from baleropy import Bot
+from baleropy.client.server import ApiServer
+from baleropy.client.session.aiohttp import AiohttpSession
+from baleropy.dispatcher import UNHANDLED, Dispatcher
+from baleropy.dispatcher.middlewares import (
     CallbackAnswerMiddleware,
     LoggingMiddleware,
     ThrottlingMiddleware,
 )
-from balegram.types import Update
-from balegram.webhook import SimpleRequestHandler, secret_path
+from baleropy.types import Update
+from baleropy.webhook import SimpleRequestHandler, secret_path
 
 
 def message_update(text: str, update_id: int = 1, user: int = 1) -> dict[str, Any]:
@@ -67,7 +67,7 @@ async def test_logging_middleware_reraises(caplog: pytest.LogCaptureFixture) -> 
     async def boom() -> None:
         raise RuntimeError("x")
 
-    with caplog.at_level("INFO", logger="balegram.middleware"), pytest.raises(RuntimeError):
+    with caplog.at_level("INFO", logger="baleropy.middleware"), pytest.raises(RuntimeError):
         await dp.feed_update(bot, Update.model_validate(message_update("a")))
     assert any("failed" in r.message for r in caplog.records)
 

@@ -13,5 +13,5 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: pip install -e ".[dev]"
       - run: ruff check .
-      - run: mypy balegram
+      - run: mypy baleropy
       - run: pytest
