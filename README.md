@@ -13,14 +13,17 @@ familiar to [aiogram](https://github.com/aiogram/aiogram) users.
 - **Polling and webhook** runners, 429 auto-retry, graceful shutdown.
 - **Colored buttons** (`style=`), deep links, Markdown helpers, Business API, flood control.
 - Python **3.10+**, strict `mypy`, tested on 3.10 and 3.15.
+- 📘 **Full documentation (Persian + English): https://rezamardani01.github.io/balegram-docs/**
 
 ## Install
 
 ```bash
-pip install git+https://github.com/rezamardani01/balegram.git
-# with Redis storage
-pip install "balegram[redis] @ git+https://github.com/rezamardani01/balegram.git"
+pip install balegram
+# with Redis storage for the FSM
+pip install "balegram[redis]"
 ```
+
+Latest unreleased code: `pip install git+https://github.com/rezamardani01/balegram.git`
 
 ## Quick start
 
@@ -135,7 +138,7 @@ async def name(message: Message, state: FSMContext):
 
 ## Webhook
 
-See [`examples/webhook_bot.py`](examples/webhook_bot.py). Bale webhooks need HTTPS on port 443 or 88
+See [`examples/webhook_bot.py`](https://github.com/rezamardani01/balegram/blob/main/examples/webhook_bot.py). Bale webhooks need HTTPS on port 443 or 88
 and send no secret header, so use `secret_path()` (or a `verify=` callback) to keep the URL private.
 
 ## Sending files
@@ -220,7 +223,7 @@ most `max_concurrent_updates=50` updates at once.
 
 ## Examples
 
-[`examples/`](examples) holds a minimal bot, a modular bot (routers + middlewares + custom filter),
+[`examples/`](https://github.com/rezamardani01/balegram/tree/main/examples) holds a minimal bot, a modular bot (routers + middlewares + custom filter),
 an FSM form, colored buttons and a webhook bot. Put your token in the `TOKEN` constant at the top
 of each file. The examples are exercised by the test suite.
 

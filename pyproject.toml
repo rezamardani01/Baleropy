@@ -7,35 +7,51 @@ name = "balegram"
 dynamic = ["version"]
 description = "Modern, fully-typed, asynchronous framework for the Bale Bot API"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [{ name = "Reza Mardani" }]
-keywords = ["bale", "bot", "api", "asyncio", "framework", "aiogram"]
+keywords = ["bale", "bale-bot", "bot", "api", "asyncio", "framework", "aiogram", "pydantic", "chatbot"]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
     "Framework :: AsyncIO",
+    "Framework :: Pydantic :: 2",
+    "Natural Language :: Persian",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: Communications :: Chat",
+    "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = ["aiohttp>=3.9", "pydantic>=2.7,<3"]
 
 [project.optional-dependencies]
 redis = ["redis>=5"]
-dev = ["pytest>=8", "pytest-asyncio>=0.23", "aresponses>=3", "ruff>=0.5", "mypy>=1.10"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "aresponses>=3", "ruff>=0.5", "mypy>=1.10", "build>=1", "twine>=5"]
 
 [project.urls]
 Homepage = "https://github.com/rezamardani01/balegram"
+Documentation = "https://rezamardani01.github.io/balegram-docs/"
+Source = "https://github.com/rezamardani01/balegram"
 Issues = "https://github.com/rezamardani01/balegram/issues"
+Changelog = "https://github.com/rezamardani01/balegram/blob/main/CHANGELOG.md"
 
 [tool.hatch.version]
 path = "balegram/__meta__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["balegram"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/balegram", "/tests", "/examples", "/README.md", "/LICENSE", "/CHANGELOG.md", "/pyproject.toml"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
