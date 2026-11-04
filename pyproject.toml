@@ -39,7 +39,7 @@ dev = ["pytest>=8", "pytest-asyncio>=0.23", "aresponses>=3", "ruff>=0.5", "mypy>
 
 [project.urls]
 Homepage = "https://github.com/rezamardani01/Baleropy"
-Documentation = "https://rezamardani01.github.io/balegram-docs/"
+Documentation = "https://rezamardani01.github.io/baleropy-docs/"
 Source = "https://github.com/rezamardani01/Baleropy"
 Issues = "https://github.com/rezamardani01/Baleropy/issues"
 Changelog = "https://github.com/rezamardani01/Baleropy/blob/main/CHANGELOG.md"
