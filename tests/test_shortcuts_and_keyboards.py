@@ -4,9 +4,9 @@ from typing import Any
 
 import pytest
 
-from balegram.filters import CallbackData
-from balegram.types import CallbackQuery, Message
-from balegram.utils import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from baleropy.filters import CallbackData
+from baleropy.types import CallbackQuery, Message
+from baleropy.utils import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 
 class RecordingBot:
@@ -148,8 +148,8 @@ def test_reply_builder_serialization() -> None:
 
 
 def test_colored_buttons_serialize_style() -> None:
-    from balegram.methods import SendMessage
-    from balegram.types import ButtonStyle
+    from baleropy.methods import SendMessage
+    from baleropy.types import ButtonStyle
 
     kb = InlineKeyboardBuilder()
     kb.button(text="green", callback_data="g", style=ButtonStyle.SUCCESS)

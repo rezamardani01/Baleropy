@@ -13,10 +13,10 @@ import os
 import sys
 import time
 
-from balegram import Bot
-from balegram.exceptions import BalegramError
-from balegram.types import BufferedInputFile
-from balegram.utils import InlineKeyboardBuilder
+from baleropy import Bot
+from baleropy.exceptions import BaleropyError
+from baleropy.types import BufferedInputFile
+from baleropy.utils import InlineKeyboardBuilder
 
 results: list[tuple[str, bool, str]] = []
 
@@ -25,10 +25,10 @@ async def check(name: str, coro) -> object | None:  # type: ignore[no-untyped-de
     started = time.perf_counter()
     try:
         value = await coro
-    except BalegramError as error:
+    except BaleropyError as error:
         results.append((name, False, f"{type(error).__name__}: {error}"))
         return None
-    except Exception as error:  # a decode/validation bug in balegram itself
+    except Exception as error:  # a decode/validation bug in baleropy itself
         results.append((name, False, f"BUG {type(error).__name__}: {error}"))
         return None
     results.append((name, True, f"{(time.perf_counter() - started) * 1000:.0f} ms"))
@@ -52,13 +52,13 @@ async def main() -> int:
             print("  sample update keys:", sorted(updates[0].model_dump(exclude_none=True)))  # type: ignore[index]
 
         if chat is not None:
-            sent = await check("sendMessage", bot.send_message(chat, "balegram smoke test"))
+            sent = await check("sendMessage", bot.send_message(chat, "baleropy smoke test"))
             kb = InlineKeyboardBuilder().button(text="ok", callback_data="smoke:ok").as_markup()
             await check("sendMessage+inline", bot.send_message(chat, "keyboard", reply_markup=kb))
             await check("sendChatAction", bot.send_chat_action(chat, "typing"))
             await check(
                 "sendDocument(upload)",
-                bot.send_document(chat, BufferedInputFile(b"hello balegram", "hello.txt")),
+                bot.send_document(chat, BufferedInputFile(b"hello baleropy", "hello.txt")),
             )
             await check("getChat", bot.get_chat(chat))
             if sent is not None:

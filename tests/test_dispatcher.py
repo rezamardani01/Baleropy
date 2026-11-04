@@ -4,11 +4,11 @@ from typing import Any
 
 import pytest
 
-from balegram import Bot
-from balegram.dispatcher import UNHANDLED, BaseMiddleware, Dispatcher, ErrorEvent, Router
-from balegram.exceptions import CancelHandler, SkipHandler
-from balegram.filters import Filter
-from balegram.types import Update
+from baleropy import Bot
+from baleropy.dispatcher import UNHANDLED, BaseMiddleware, Dispatcher, ErrorEvent, Router
+from baleropy.exceptions import CancelHandler, SkipHandler
+from baleropy.filters import Filter
+from baleropy.types import Update
 
 
 def make_update(text: str = "hi", user_id: int = 1, update_id: int = 1) -> Update:

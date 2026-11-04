@@ -2,10 +2,10 @@
 
 import asyncio
 
-from balegram import Bot, Dispatcher, F
-from balegram.filters import CommandStart
-from balegram.types import ButtonStyle, CallbackQuery, Message
-from balegram.utils import InlineKeyboardBuilder
+from baleropy import Bot, Dispatcher, F
+from baleropy.filters import CommandStart
+from baleropy.types import ButtonStyle, CallbackQuery, Message
+from baleropy.utils import InlineKeyboardBuilder
 
 # Get a token from @botfather (https://ble.ir/botfather) and paste it here.
 TOKEN = "YOUR_BOT_TOKEN"

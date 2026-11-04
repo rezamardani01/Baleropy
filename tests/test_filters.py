@@ -6,9 +6,9 @@ from typing import Any
 
 import pytest
 
-from balegram import Bot
-from balegram.dispatcher import UNHANDLED, Dispatcher
-from balegram.filters import (
+from baleropy import Bot
+from baleropy.dispatcher import UNHANDLED, Dispatcher
+from baleropy.filters import (
     CallbackData,
     ChatTypeFilter,
     Command,
@@ -16,7 +16,7 @@ from balegram.filters import (
     CommandStart,
     F,
 )
-from balegram.types import CallbackQuery, Message, Update
+from baleropy.types import CallbackQuery, Message, Update
 
 
 def msg(text: str | None = "hi", chat_type: str = "private", **extra: Any) -> Message:

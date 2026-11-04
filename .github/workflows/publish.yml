@@ -2,7 +2,7 @@ name: Publish to PyPI
 
 # Publishes with PyPI "Trusted Publishing" (OIDC): no API token is stored anywhere.
 # One-time setup on pypi.org: Account -> Publishing -> add a pending publisher
-#   project: balegram-api | owner: rezamardani01 | repo: balegram
+#   project: baleropy | owner: rezamardani01 | repo: Baleropy
 #   workflow: publish.yml | environment: pypi
 # Then create a GitHub Release (tag v<version>) to publish.
 
@@ -23,7 +23,7 @@ jobs:
       - name: Check that the tag matches the package version
         if: github.event_name == 'release'
         run: |
-          VERSION=$(python -c "import re,pathlib;print(re.search(r'\"(.+?)\"', pathlib.Path('balegram/__meta__.py').read_text()).group(1))")
+          VERSION=$(python -c "import re,pathlib;print(re.search(r'\"(.+?)\"', pathlib.Path('baleropy/__meta__.py').read_text()).group(1))")
           test "v$VERSION" = "${{ github.event.release.tag_name }}" || { echo "tag ${{ github.event.release.tag_name }} != v$VERSION"; exit 1; }
       - run: python -m build
       - run: twine check dist/*

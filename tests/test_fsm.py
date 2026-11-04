@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from balegram import Bot
-from balegram.dispatcher import UNHANDLED, Dispatcher
-from balegram.filters import Command, StateFilter
-from balegram.fsm import (
+from baleropy import Bot
+from baleropy.dispatcher import UNHANDLED, Dispatcher
+from baleropy.filters import Command, StateFilter
+from baleropy.fsm import (
     FSMContext,
     FSMContextMiddleware,
     FSMStrategy,
@@ -16,7 +16,7 @@ from balegram.fsm import (
     any_state,
     default_state,
 )
-from balegram.types import Update
+from baleropy.types import Update
 
 
 class Form(StatesGroup):

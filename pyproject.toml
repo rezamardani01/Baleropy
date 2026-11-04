@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "balegram-api"
+name = "baleropy"
 dynamic = ["version"]
 description = "Modern, fully-typed, asynchronous framework for the Bale Bot API"
 readme = "README.md"
@@ -38,20 +38,20 @@ redis = ["redis>=5"]
 dev = ["pytest>=8", "pytest-asyncio>=0.23", "aresponses>=3", "ruff>=0.5", "mypy>=1.10", "build>=1", "twine>=5"]
 
 [project.urls]
-Homepage = "https://github.com/rezamardani01/balegram"
+Homepage = "https://github.com/rezamardani01/Baleropy"
 Documentation = "https://rezamardani01.github.io/balegram-docs/"
-Source = "https://github.com/rezamardani01/balegram"
-Issues = "https://github.com/rezamardani01/balegram/issues"
-Changelog = "https://github.com/rezamardani01/balegram/blob/main/CHANGELOG.md"
+Source = "https://github.com/rezamardani01/Baleropy"
+Issues = "https://github.com/rezamardani01/Baleropy/issues"
+Changelog = "https://github.com/rezamardani01/Baleropy/blob/main/CHANGELOG.md"
 
 [tool.hatch.version]
-path = "balegram/__meta__.py"
+path = "baleropy/__meta__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["balegram"]
+packages = ["baleropy"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/balegram", "/tests", "/examples", "/README.md", "/LICENSE", "/CHANGELOG.md", "/pyproject.toml"]
+include = ["/baleropy", "/tests", "/examples", "/README.md", "/LICENSE", "/CHANGELOG.md", "/pyproject.toml"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

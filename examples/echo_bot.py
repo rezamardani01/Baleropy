@@ -2,9 +2,9 @@
 
 import asyncio
 
-from balegram import Bot, Dispatcher, F
-from balegram.filters import CommandStart
-from balegram.types import Message
+from baleropy import Bot, Dispatcher, F
+from baleropy.filters import CommandStart
+from baleropy.types import Message
 
 # Get a token from @botfather (https://ble.ir/botfather) and paste it here.
 # Never commit a real token to a public repository.

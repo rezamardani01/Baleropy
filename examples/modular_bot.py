@@ -4,12 +4,12 @@ import asyncio
 import logging
 from typing import Any
 
-from balegram import Bot, Dispatcher, F, Router
-from balegram.dispatcher import BaseMiddleware
-from balegram.dispatcher.middlewares import LoggingMiddleware, ThrottlingMiddleware
-from balegram.filters import CallbackData, Command, Filter
-from balegram.types import CallbackQuery, Message
-from balegram.utils import InlineKeyboardBuilder
+from baleropy import Bot, Dispatcher, F, Router
+from baleropy.dispatcher import BaseMiddleware
+from baleropy.dispatcher.middlewares import LoggingMiddleware, ThrottlingMiddleware
+from baleropy.filters import CallbackData, Command, Filter
+from baleropy.types import CallbackQuery, Message
+from baleropy.utils import InlineKeyboardBuilder
 
 # Get a token from @botfather (https://ble.ir/botfather) and paste it here.
 # Never commit a real token to a public repository.

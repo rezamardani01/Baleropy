@@ -6,24 +6,24 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from balegram import Bot, F
-from balegram.dispatcher import Dispatcher, ErrorEvent, get_flag
-from balegram.filters import (
+from baleropy import Bot, F
+from baleropy.dispatcher import Dispatcher, ErrorEvent, get_flag
+from baleropy.filters import (
     CommandStart,
     ExceptionMessageFilter,
     ExceptionTypeFilter,
     MagicData,
 )
-from balegram.methods import (
+from baleropy.methods import (
     AnswerCallbackQuery,
     CreateInvoiceLink,
     CreateNewStickerSet,
     SendMessage,
 )
-from balegram.methods.media_group import InputMediaPhoto
-from balegram.methods.misc import InputSticker
-from balegram.types import BufferedInputFile, LabeledPrice, Message, Update
-from balegram.utils import (
+from baleropy.methods.media_group import InputMediaPhoto
+from baleropy.methods.misc import InputSticker
+from baleropy.types import BufferedInputFile, LabeledPrice, Message, Update
+from baleropy.utils import (
     ChatActionSender,
     MediaGroupBuilder,
     bold,
