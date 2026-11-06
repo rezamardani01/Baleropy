@@ -172,11 +172,15 @@ class Dispatcher(Router):
             except asyncio.CancelledError:
                 fetch.cancel()
                 waiter.cancel()
+                await asyncio.gather(fetch, waiter, return_exceptions=True)
                 raise
-            waiter.cancel()
+            if not waiter.done():
+                waiter.cancel()
             if not fetch.done():
                 fetch.cancel()
+                await asyncio.gather(fetch, waiter, return_exceptions=True)
                 break
+            await asyncio.gather(waiter, return_exceptions=True)
             try:
                 updates = fetch.result()
             except BaleUnauthorized:

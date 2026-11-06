@@ -30,7 +30,6 @@ Latest unreleased code: `pip install git+https://github.com/rezamardani01/Balero
 ## Quick start
 
 ```python
-import asyncio
 from baleropy import Bot, Dispatcher, F
 from baleropy.filters import CommandStart
 from baleropy.types import Message
@@ -50,7 +49,7 @@ async def echo(message: Message):
     await message.reply(message.text)
 
 
-asyncio.run(dp.start_polling(Bot(TOKEN), skip_updates=True))
+dp.run_polling(Bot(TOKEN), skip_updates=True)
 ```
 
 ## Routers
@@ -264,6 +263,10 @@ Sending is billed from your Bale business account credit.
 On HTTP 429 the session pauses *every* request of that bot for `retry_after` seconds and retries
 (`AiohttpSession(retry_on_flood=60, max_flood_retries=5)`). `Dispatcher.start_polling` handles at
 most `max_concurrent_updates=50` updates at once.
+
+For a simple script, prefer `dp.run_polling(Bot(TOKEN))`. It handles Ctrl+C and closes the bot
+session during shutdown. If you manage the event loop yourself, use `await dp.start_polling(...)`
+and handle cancellation in your application's runner.
 
 ## Examples
 

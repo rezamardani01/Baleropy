@@ -1,6 +1,5 @@
 """Routers, middlewares and custom filters working together."""
 
-import asyncio
 import logging
 from typing import Any
 
@@ -79,18 +78,15 @@ async def long_text(message: Message, words: list[str]) -> None:
     await message.answer(f"{len(words)} کلمه فرستادید")
 
 
-async def main() -> None:
+def main() -> None:
     logging.basicConfig(level=logging.INFO)
     dp = Dispatcher()
     dp.update.outer_middleware(AdminFlagMiddleware())
     dp.message.outer_middleware(LoggingMiddleware())
     dp.message.outer_middleware(ThrottlingMiddleware(rate=0.5))
     dp.include_routers(polls, admin, common)
-    await dp.start_polling(Bot(TOKEN), skip_updates=True)
+    dp.run_polling(Bot(TOKEN), skip_updates=True)
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        pass
+    main()

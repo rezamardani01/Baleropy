@@ -1,7 +1,5 @@
 """Smallest possible bot: greets on /start and echoes everything else."""
 
-import asyncio
-
 from baleropy import Bot, Dispatcher, F
 from baleropy.filters import CommandStart
 from baleropy.types import Message
@@ -23,13 +21,5 @@ async def echo(message: Message) -> None:
     await message.reply(message.text or "")
 
 
-async def main() -> None:
-    bot = Bot(TOKEN)
-    await dp.start_polling(bot, skip_updates=True)
-
-
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        pass  # Ctrl+C
+    dp.run_polling(Bot(TOKEN), skip_updates=True)

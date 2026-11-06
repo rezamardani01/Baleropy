@@ -1,7 +1,5 @@
 """Multi-step conversation with the finite state machine."""
 
-import asyncio
-
 from baleropy import Bot, Dispatcher, F
 from baleropy.filters import Command
 from baleropy.fsm import FSMContext, MemoryStorage, State, StatesGroup
@@ -50,12 +48,5 @@ async def bad_age(message: Message) -> None:
     await message.answer("لطفاً عدد وارد کنید")
 
 
-async def main() -> None:
-    await dp.start_polling(Bot(TOKEN), skip_updates=True)
-
-
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        pass
+    dp.run_polling(Bot(TOKEN), skip_updates=True)

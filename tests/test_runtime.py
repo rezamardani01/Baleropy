@@ -213,6 +213,52 @@ async def test_polling_requires_bot() -> None:
         await Dispatcher().start_polling()
 
 
+async def test_polling_cancellation_waits_for_polling_tasks() -> None:
+    started = asyncio.Event()
+    cleaned_up = asyncio.Event()
+    session_closed = asyncio.Event()
+
+    class BlockingBot(Bot):
+        async def delete_webhook(self) -> bool:
+            return True
+
+        async def get_updates(
+            self,
+            offset: int | None = None,
+            limit: int | None = None,
+            timeout: int | None = None,
+        ) -> list[Update]:
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cleaned_up.set()
+            return []
+
+        async def close(self) -> None:
+            session_closed.set()
+
+    bot = BlockingBot("1:abc")
+    task = asyncio.create_task(Dispatcher().start_polling(bot, polling_timeout=30))
+    await asyncio.wait_for(started.wait(), timeout=1)
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert cleaned_up.is_set()
+    assert session_closed.is_set()
+
+
+def test_run_polling_suppresses_keyboard_interrupt(monkeypatch: pytest.MonkeyPatch) -> None:
+    def interrupt(coroutine: Any) -> None:
+        coroutine.close()
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(asyncio, "run", interrupt)
+    Dispatcher().run_polling(Bot("1:abc"))
+
+
 def test_feed_unknown_update_is_unhandled() -> None:
     dp = Dispatcher()
     bot = Bot("1:abc")

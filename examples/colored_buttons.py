@@ -1,7 +1,5 @@
 """Colored inline buttons (Bale beta feature): green, red and blue via ``style=``."""
 
-import asyncio
-
 from baleropy import Bot, Button, Dispatcher, F
 from baleropy.filters import CommandStart
 from baleropy.types import ButtonStyle, CallbackQuery, Message
@@ -30,12 +28,5 @@ async def pressed(query: CallbackQuery) -> None:
     await query.answer(f"روی {query.data} زدی")
 
 
-async def main() -> None:
-    await dp.start_polling(Bot(TOKEN), skip_updates=True)
-
-
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        pass
+    dp.run_polling(Bot(TOKEN), skip_updates=True)
