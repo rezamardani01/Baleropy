@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.4
+
+- Stop polling cleanly on Ctrl+C and wait for pending polling tasks to finish cancellation.
+- Use `Dispatcher.run_polling()` in examples for simpler shutdown handling.
+
 ## 0.3.3
 
 - Publish from GitHub Actions with PyPI Trusted Publishing to restore verifiable provenance.
