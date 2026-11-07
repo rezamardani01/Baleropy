@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable, Iterator
 from typing import Any
 
@@ -7,6 +8,8 @@ from .event.bases import UNHANDLED, Data
 from .event.handler import CallableObject
 from .event.observer import EventObserver
 from .middlewares.base import wrap_middlewares
+
+log = logging.getLogger("baleropy.dispatcher")
 
 EVENT_TYPES = (
     "message",
@@ -42,6 +45,8 @@ class Router:
         }
         self.startup_callbacks: list[CallableObject] = []
         self.shutdown_callbacks: list[CallableObject] = []
+        self.connect_callbacks: list[CallableObject] = []
+        self.disconnect_callbacks: list[CallableObject] = []
 
     def __repr__(self) -> str:
         return f"<{type(self).__name__} {self.name!r}>"
@@ -100,6 +105,24 @@ class Router:
     def on_shutdown(self, callback: Callable[..., Any]) -> Callable[..., Any]:
         self.shutdown_callbacks.append(CallableObject(callback))
         return callback
+
+    def on_connect(self, callback: Callable[..., Any]) -> Callable[..., Any]:
+        """Run ``callback`` when polling reaches Bale again after the connection was lost."""
+        self.connect_callbacks.append(CallableObject(callback))
+        return callback
+
+    def on_disconnect(self, callback: Callable[..., Any]) -> Callable[..., Any]:
+        """Run ``callback`` once when polling loses the connection to Bale."""
+        self.disconnect_callbacks.append(CallableObject(callback))
+        return callback
+
+    async def emit_connection(self, connected: bool, **kwargs: Any) -> None:
+        for router in self.chain_tail:
+            for cb in router.connect_callbacks if connected else router.disconnect_callbacks:
+                try:
+                    await cb.call(**kwargs)
+                except Exception:
+                    log.exception("Connection callback failed")
 
     async def emit_startup(self, **kwargs: Any) -> None:
         for router in self.chain_tail:

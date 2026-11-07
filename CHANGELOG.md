@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.6
+
+- `Dispatcher.run_polling` / `start_polling` accept a plain token string.
+- Add `@dp.on_connect` and `@dp.on_disconnect` callbacks fired when polling loses/regains Bale.
+- Polling now waits and retries when the network is down at startup, and keeps running after an unexpected API or decode error from `getUpdates`.
+
 ## 0.3.5
 
 - Fix `skip_updates=True` hanging forever: Bale keeps returning fresh updates, so skipping now stops at the first partial page and is capped at 100 rounds.

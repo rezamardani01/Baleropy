@@ -279,3 +279,116 @@ async def test_unknown_update_reaches_catch_all_handler() -> None:
     await dp.feed_update(bot, update)
 
     assert unknown == [{"future_event": {"value": 42}}]
+
+
+# --- regressions seen with the real Bale server ----------------------------------------------
+async def _serve(handler: Any) -> tuple[TestServer, Bot]:
+    app = web.Application()
+    app.router.add_route("*", "/bot{token}/{method}", handler)
+    server = TestServer(app)
+    await server.start_server()
+    bot = Bot("1:abc", server=ApiServer.from_base(str(server.make_url("")).rstrip("/")))
+    return server, bot
+
+
+async def test_skip_updates_ends_when_bale_always_returns_a_new_update() -> None:
+    """Bale answers every getUpdates with one fresh update; skipping must still finish."""
+    calls = {"n": 0}
+
+    async def api(request: web.Request) -> web.Response:
+        if request.match_info["method"] == "deleteWebhook":
+            return web.json_response({"ok": True, "result": True})
+        calls["n"] += 1
+        return web.json_response({"ok": True, "result": [message_update("x", calls["n"])]})
+
+    server, bot = await _serve(api)
+    dp = Dispatcher()
+
+    skipped: list[int] = []
+
+    @dp.message()
+    async def first(message: Any) -> None:
+        skipped.append(calls["n"])  # getUpdates calls made before the first real handler
+        await dp.stop_polling()
+
+    try:
+        await asyncio.wait_for(dp.start_polling(bot, skip_updates=True, polling_timeout=0), 10)
+    finally:
+        await server.close()
+    assert skipped and skipped[0] <= 5
+
+
+async def test_connect_and_disconnect_callbacks_and_token_string() -> None:
+    state = {"fail": 2}
+    events: list[str] = []
+
+    async def api(request: web.Request) -> web.Response:
+        if request.match_info["method"] == "deleteWebhook":
+            return web.json_response({"ok": True, "result": True})
+        if state["fail"] > 0:
+            state["fail"] -= 1
+            return web.Response(status=502, text="bad gateway")
+        return web.json_response({"ok": True, "result": []})
+
+    server, _ = await _serve(api)
+    dp = Dispatcher()
+
+    @dp.on_disconnect
+    async def lost() -> None:
+        events.append("lost")
+
+    @dp.on_connect
+    async def back() -> None:
+        events.append("back")
+        await dp.stop_polling()
+
+    bot = Bot("1:abc", server=ApiServer.from_base(str(server.make_url("")).rstrip("/")))
+    try:
+        await asyncio.wait_for(
+            dp.start_polling(bot, polling_timeout=0, backoff=(0.01, 0.02, 1.0)), timeout=10
+        )
+    finally:
+        await server.close()
+    assert events == ["lost", "back"]
+
+
+async def test_polling_survives_unexpected_api_error() -> None:
+    state = {"n": 0}
+
+    async def api(request: web.Request) -> web.Response:
+        if request.match_info["method"] == "deleteWebhook":
+            return web.json_response({"ok": True, "result": True})
+        state["n"] += 1
+        if state["n"] == 1:
+            return web.json_response(
+                {"ok": False, "error_code": 400, "description": "odd"}, status=400
+            )
+        return web.json_response({"ok": True, "result": [message_update("hi", 5)]})
+
+    server, bot = await _serve(api)
+    dp = Dispatcher()
+    seen: list[str] = []
+
+    @dp.message()
+    async def got(message: Any) -> None:
+        seen.append(message.text)
+        await dp.stop_polling()
+
+    try:
+        await asyncio.wait_for(
+            dp.start_polling(bot, polling_timeout=0, backoff=(0.01, 0.02, 1.0)), timeout=10
+        )
+    finally:
+        await server.close()
+    assert seen == ["hi"]
+
+
+def test_run_polling_accepts_token_string(monkeypatch: pytest.MonkeyPatch) -> None:
+    created: list[Any] = []
+
+    async def fake(self: Dispatcher, *bots: Bot, **kwargs: Any) -> None:
+        created.extend(bots)
+
+    monkeypatch.setattr(Dispatcher, "start_polling", fake)
+    Dispatcher().run_polling("1:abc")
+    assert created == ["1:abc"]

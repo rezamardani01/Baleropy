@@ -264,9 +264,23 @@ On HTTP 429 the session pauses *every* request of that bot for `retry_after` sec
 (`AiohttpSession(retry_on_flood=60, max_flood_retries=5)`). `Dispatcher.start_polling` handles at
 most `max_concurrent_updates=50` updates at once.
 
-For a simple script, prefer `dp.run_polling(Bot(TOKEN))`. It handles Ctrl+C and closes the bot
+For a simple script, prefer `dp.run_polling(TOKEN)` (a `Bot` object works too). It handles Ctrl+C and closes the bot
 session during shutdown. If you manage the event loop yourself, use `await dp.start_polling(...)`
 and handle cancellation in your application's runner.
+
+Polling survives network drops on its own (it waits and retries). To react to that, register
+`@dp.on_disconnect` and `@dp.on_connect` callbacks:
+
+```python
+@dp.on_disconnect
+async def lost() -> None:
+    print("connection to Bale lost")
+
+
+@dp.on_connect
+async def back() -> None:
+    print("connection restored")
+```
 
 ## Examples
 

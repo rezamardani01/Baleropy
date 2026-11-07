@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import logging
 import random
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from ..client.bot import Bot
@@ -14,6 +15,7 @@ from ..exceptions import (
     BaleServerError,
     BaleUnauthorized,
     CancelHandler,
+    ClientDecodeError,
 )
 from ..fsm.middleware import FSMContextMiddleware, FSMStrategy
 from ..fsm.storage.base import BaseStorage
@@ -91,7 +93,7 @@ class Dispatcher(Router):
     # --- polling ---------------------------------------------------------------------------
     async def start_polling(
         self,
-        *bots: Bot,
+        *bots: Bot | str,
         polling_timeout: int = 30,
         handle_as_tasks: bool = True,
         max_concurrent_updates: int = 50,
@@ -107,10 +109,11 @@ class Dispatcher(Router):
         """
         if not bots:
             raise ValueError("At least one Bot instance is required")
+        bot_list = tuple(Bot(bot) if isinstance(bot, str) else bot for bot in bots)
         self._stop_event = asyncio.Event()
         self._semaphore = asyncio.Semaphore(max_concurrent_updates)
-        workflow = {**kwargs, "bots": bots}
-        await self.emit_startup(dispatcher=self, bot=bots[-1], **self.workflow_data, **workflow)
+        workflow = {**kwargs, "bots": bot_list}
+        await self.emit_startup(dispatcher=self, bot=bot_list[-1], **self.workflow_data, **workflow)
         try:
             await asyncio.gather(
                 *(
@@ -123,19 +126,22 @@ class Dispatcher(Router):
                         backoff,
                         workflow,
                     )
-                    for bot in bots
+                    for bot in bot_list
                 )
             )
         finally:
             await self._wait_tasks()
             await self.emit_shutdown(
-                dispatcher=self, bot=bots[-1], **self.workflow_data, **workflow
+                dispatcher=self, bot=bot_list[-1], **self.workflow_data, **workflow
             )
             if close_bot_session:
-                await asyncio.gather(*(bot.close() for bot in bots), return_exceptions=True)
+                await asyncio.gather(*(bot.close() for bot in bot_list), return_exceptions=True)
 
-    def run_polling(self, *bots: Bot, **kwargs: Any) -> None:
-        """Blocking helper: ``asyncio.run(start_polling(...))`` that exits quietly on Ctrl+C."""
+    def run_polling(self, *bots: Bot | str, **kwargs: Any) -> None:
+        """Blocking helper: ``asyncio.run(start_polling(...))`` that exits quietly on Ctrl+C.
+
+        Bots may be given as :class:`Bot` objects or plain token strings.
+        """
         with contextlib.suppress(KeyboardInterrupt):
             asyncio.run(self.start_polling(*bots, **kwargs))
 
@@ -156,13 +162,45 @@ class Dispatcher(Router):
     ) -> None:
         stop = self._stop_event
         assert stop is not None
-        if delete_webhook:
-            await bot.delete_webhook()
-        offset: int | None = None
-        if skip_updates:
-            offset = await self._skip_pending(bot)
         delay, max_delay, factor = backoff
         current = delay
+        connected = True
+        context = {**self.workflow_data, **workflow}
+
+        async def connection_lost(error: Exception) -> None:
+            nonlocal connected, current
+            if connected:
+                connected = False
+                await self.emit_connection(False, dispatcher=self, bot=bot, **context)
+            sleep_for = current + random.uniform(0, current / 10)  # noqa: S311
+            log.warning("Bot %s: %s, retry in %.1fs", bot.id, error, sleep_for)
+            await self._sleep(stop, sleep_for)
+            current = min(current * factor, max_delay)
+
+        async def connection_ok() -> None:
+            nonlocal connected, current
+            current = delay
+            if not connected:
+                connected = True
+                await self.emit_connection(True, dispatcher=self, bot=bot, **context)
+
+        async def until_connected(call: Callable[[], Awaitable[Any]]) -> Any:
+            # startup requests wait for the network instead of crashing the bot
+            while not stop.is_set():
+                try:
+                    result = await call()
+                except (BaleNetworkError, BaleServerError) as error:
+                    await connection_lost(error)
+                    continue
+                await connection_ok()
+                return result
+            return None
+
+        if delete_webhook:
+            await until_connected(bot.delete_webhook)
+        offset: int | None = None
+        if skip_updates:
+            offset = await until_connected(lambda: self._skip_pending(bot))
         log.info("Polling started for bot %s", bot.id)
         while not stop.is_set():
             fetch = asyncio.create_task(bot.get_updates(offset=offset, limit=100, timeout=timeout))
@@ -190,12 +228,14 @@ class Dispatcher(Router):
                 await self._sleep(stop, max(error.retry_after, 1))
                 continue
             except (BaleNetworkError, BaleServerError) as error:
-                sleep_for = current + random.uniform(0, current / 10)  # noqa: S311
-                log.warning("Bot %s: %s, retry in %.1fs", bot.id, error, sleep_for)
-                await self._sleep(stop, sleep_for)
-                current = min(current * factor, max_delay)
+                await connection_lost(error)
                 continue
-            current = delay
+            except (BaleAPIError, ClientDecodeError) as error:
+                # an odd answer from Bale must not kill the bot: log it and try again
+                log.warning("Bot %s: getUpdates failed: %s", bot.id, error)
+                await self._sleep(stop, delay)
+                continue
+            await connection_ok()
             for update in updates:
                 offset = update.update_id + 1
                 if as_tasks:
