@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.5
+
+- Fix `skip_updates=True` hanging forever: Bale keeps returning fresh updates, so skipping now stops at the first partial page and is capped at 100 rounds.
+
 ## 0.3.4
 
 - Stop polling cleanly on Ctrl+C and wait for pending polling tasks to finish cancellation.
