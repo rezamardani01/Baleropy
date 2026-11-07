@@ -208,11 +208,16 @@ class Dispatcher(Router):
 
     async def _skip_pending(self, bot: Bot) -> int | None:
         offset: int | None = None
-        while True:
+        # Bale may keep returning a fresh update on every call, so "until empty" can loop
+        # forever: stop at the first partial page and cap the number of rounds.
+        for _ in range(100):
             updates = await bot.get_updates(offset=offset, limit=100, timeout=0)
             if not updates:
-                return offset
+                break
             offset = updates[-1].update_id + 1
+            if len(updates) < 100:
+                break
+        return offset
 
     @staticmethod
     async def _sleep(stop: asyncio.Event, seconds: float) -> None:
